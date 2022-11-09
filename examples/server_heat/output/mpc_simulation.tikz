@@ -1,0 +1,134 @@
+% Recommended preamble:
+% \usetikzlibrary{arrows.meta}
+% \usetikzlibrary{backgrounds}
+% \usepgfplotslibrary{patchplots}
+% \usepgfplotslibrary{fillbetween}
+% \pgfplotsset{%
+%     layers/standard/.define layer set={%
+%         background,axis background,axis grid,axis ticks,axis lines,axis tick labels,pre main,main,axis descriptions,axis foreground%
+%     }{
+%         grid style={/pgfplots/on layer=axis grid},%
+%         tick style={/pgfplots/on layer=axis ticks},%
+%         axis line style={/pgfplots/on layer=axis lines},%
+%         label style={/pgfplots/on layer=axis descriptions},%
+%         legend style={/pgfplots/on layer=axis descriptions},%
+%         title style={/pgfplots/on layer=axis descriptions},%
+%         colorbar style={/pgfplots/on layer=axis descriptions},%
+%         ticklabel style={/pgfplots/on layer=axis tick labels},%
+%         axis background@ style={/pgfplots/on layer=axis background},%
+%         3d box foreground style={/pgfplots/on layer=axis foreground},%
+%     },
+% }
+
+\begin{tikzpicture}[/tikz/background rectangle/.style={fill={rgb,1:red,1.0;green,1.0;blue,1.0}, draw opacity={1.0}}, show background rectangle]
+\begin{axis}[point meta max={nan}, point meta min={nan}, legend cell align={left}, legend columns={1}, title={}, title style={at={{(0.5,1)}}, anchor={south}, font={{\fontsize{14 pt}{18.2 pt}\selectfont}}, color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={1.0}, rotate={0.0}, align={center}}, legend style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={1.0}, line width={1}, solid, fill={rgb,1:red,1.0;green,1.0;blue,1.0}, fill opacity={1.0}, text opacity={1.0}, font={{\fontsize{8 pt}{10.4 pt}\selectfont}}, text={rgb,1:red,0.0;green,0.0;blue,0.0}, cells={anchor={center}}, at={(1.02, 1)}, anchor={north west}}, axis background/.style={fill={rgb,1:red,1.0;green,1.0;blue,1.0}, opacity={1.0}}, anchor={north west}, xshift={1.0mm}, yshift={-1.0mm}, width={145.4mm}, height={99.6mm}, scaled x ticks={false}, xlabel={MPC time step}, x tick style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, opacity={1.0}}, x tick label style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, opacity={1.0}, rotate={0}}, xlabel style={at={(ticklabel cs:0.5)}, anchor=near ticklabel, at={{(ticklabel cs:0.5)}}, anchor={near ticklabel}, font={{\fontsize{11 pt}{14.3 pt}\selectfont}}, color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={1.0}, rotate={0.0}}, xmajorgrids={true}, xmin={0.4299999999999997}, xmax={20.57}, xticklabels={{$5$,$10$,$15$,$20$}}, xtick={{5.0,10.0,15.0,20.0}}, xtick align={inside}, xticklabel style={font={{\fontsize{8 pt}{10.4 pt}\selectfont}}, color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={1.0}, rotate={0.0}}, x grid style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={0.1}, line width={0.5}, solid}, axis x line*={left}, x axis line style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={1.0}, line width={1}, solid}, scaled y ticks={false}, ylabel={Solver run time [s]}, y tick style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, opacity={1.0}}, y tick label style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, opacity={1.0}, rotate={0}}, ylabel style={at={(ticklabel cs:0.5)}, anchor=near ticklabel, at={{(ticklabel cs:0.5)}}, anchor={near ticklabel}, font={{\fontsize{11 pt}{14.3 pt}\selectfont}}, color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={1.0}, rotate={0.0}}, ymajorgrids={true}, ymin={-0.022046597791499867}, ymax={5.515416725441501}, yticklabels={{$0$,$1$,$2$,$3$,$4$,$5$}}, ytick={{0.0,1.0,2.0,3.0,4.0,5.0}}, ytick align={inside}, yticklabel style={font={{\fontsize{8 pt}{10.4 pt}\selectfont}}, color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={1.0}, rotate={0.0}}, y grid style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={0.1}, line width={0.5}, solid}, axis y line*={left}, y axis line style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={1.0}, line width={1}, solid}, colorbar={false}]
+    \addplot[color={rgb,1:red,1.0;green,0.0;blue,0.0}, name path={383a724c-368c-43fe-8755-7039abd932c9}, draw opacity={1.0}, line width={1}, solid]
+        table[row sep={\\}]
+        {
+            \\
+            1.0  5.0855387919999995  \\
+            2.0  4.006402598099999  \\
+            3.0  2.53134832685  \\
+            4.0  1.4022564579499996  \\
+            5.0  0.7861287538000001  \\
+            6.0  0.45732027384999985  \\
+            7.0  0.2620573653  \\
+            8.0  0.2137516725  \\
+            9.0  0.20195499614999995  \\
+            10.0  0.1577192128  \\
+            11.0  0.1772935013  \\
+            12.0  0.16317705114999997  \\
+            13.0  0.17357006365000002  \\
+            14.0  0.22954214025000003  \\
+            15.0  0.1491649108  \\
+            16.0  0.1498814463  \\
+            17.0  0.16103743395  \\
+            18.0  0.14021842165000004  \\
+            19.0  0.15609158724999997  \\
+            20.0  0.1346740623  \\
+        }
+        ;
+    \addlegendentry {SPOCK}
+    \addplot[color={rgb,1:red,0.0;green,0.0;blue,1.0}, name path={ba0809e1-c3f8-4bae-8225-324c44574248}, draw opacity={1.0}, line width={1}, solid]
+        table[row sep={\\}]
+        {
+            \\
+            1.0  2.0855283171  \\
+            2.0  2.02195848635  \\
+            3.0  2.06060513625  \\
+            4.0  1.9868752393499995  \\
+            5.0  1.8809316001999998  \\
+            6.0  1.8174133405500004  \\
+            7.0  1.7962743471  \\
+            8.0  1.8504351258  \\
+            9.0  1.9708188612000002  \\
+            10.0  2.04286825625  \\
+            11.0  2.1934974264000004  \\
+            12.0  2.2773941688499995  \\
+            13.0  2.27189422845  \\
+            14.0  2.6251912231000007  \\
+            15.0  2.7225582392500005  \\
+            16.0  2.9627863499000004  \\
+            17.0  2.9314876356500004  \\
+            18.0  3.22842570305  \\
+            19.0  3.0227912575499998  \\
+            20.0  3.37147593385  \\
+        }
+        ;
+    \addlegendentry {MOSEK}
+    \addplot[color={rgb,1:red,0.0;green,0.502;blue,0.0}, name path={f9eef9f8-1da1-491e-b0c6-46632f34365b}, draw opacity={1.0}, line width={1}, solid]
+        table[row sep={\\}]
+        {
+            \\
+            1.0  1.6055220680500004  \\
+            2.0  1.7191700097500004  \\
+            3.0  3.0671011402  \\
+            4.0  3.66368661005  \\
+            5.0  4.633407335  \\
+            6.0  5.35869606535  \\
+            7.0  4.57253640125  \\
+            8.0  3.7917732999500005  \\
+            9.0  2.743426736050001  \\
+            10.0  1.66554241615  \\
+            11.0  1.4021010563  \\
+            12.0  1.3345915193499998  \\
+            13.0  1.31637400635  \\
+            14.0  1.33144755225  \\
+            15.0  1.2258297638000002  \\
+            16.0  1.18825871195  \\
+            17.0  1.1891517633  \\
+            18.0  1.1840881460500001  \\
+            19.0  1.1629898592499996  \\
+            20.0  1.1550479169499996  \\
+        }
+        ;
+    \addlegendentry {GUROBI}
+    \addplot[color={rgb,1:red,0.0;green,0.0;blue,0.0}, name path={0ed8b377-f272-4a15-9a50-d0ea8a54a557}, draw opacity={1.0}, line width={1}, solid]
+        table[row sep={\\}]
+        {
+            \\
+            1.0  4.971225936050001  \\
+            2.0  4.529693164949999  \\
+            3.0  3.610347796499999  \\
+            4.0  3.3599836068  \\
+            5.0  3.489140535149999  \\
+            6.0  3.3854052259  \\
+            7.0  3.3580878136  \\
+            8.0  3.5001947817499994  \\
+            9.0  3.4400973436499998  \\
+            10.0  3.640131867349999  \\
+            11.0  3.393975840150001  \\
+            12.0  3.4095387696499992  \\
+            13.0  3.3101519986  \\
+            14.0  3.2717768372500005  \\
+            15.0  3.7938665841000003  \\
+            16.0  3.4302000307499996  \\
+            17.0  3.4363193193499995  \\
+            18.0  3.3871569478500008  \\
+            19.0  3.2965419809000003  \\
+            20.0  3.4952884127999995  \\
+        }
+        ;
+    \addlegendentry {COSMO}
+\end{axis}
+\end{tikzpicture}
