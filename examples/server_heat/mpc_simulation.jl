@@ -8,7 +8,7 @@ pgfplotsx()
 
 Random.seed!(1)
 
-M = 1
+M = 15
 
 #######################################
 ### Problem definition
@@ -126,13 +126,13 @@ for t = 1:MPC_N
   #     set_start_value(model_ipopt[:y][i], y_ipopt[i])
   #   end
   # end
-  # set_optimizer_attribute(model_ipopt, "tol", TOL)
-  # ipopt_timings[t, m] += @elapsed spock.solve_model(model_ipopt, x0_ipopt)  
-  # global x_ipopt = value.(model_ipopt[:x])
-  # global u_ipopt = value.(model_ipopt[:u])
-  # global s_ipopt = value.(model_ipopt[:s])
-  # global tau_ipopt = value.(model_ipopt[:tau])
-  # global y_ipopt = value.(model_ipopt[:y])
+  set_optimizer_attribute(model_ipopt, "tol", TOL)
+  ipopt_timings[t, m] += @elapsed spock.solve_model(model_ipopt, x0_ipopt)  
+  global x_ipopt = value.(model_ipopt[:x])
+  global u_ipopt = value.(model_ipopt[:u])
+  global s_ipopt = value.(model_ipopt[:s])
+  global tau_ipopt = value.(model_ipopt[:tau])
+  global y_ipopt = value.(model_ipopt[:y])
 
   model_cosmo = spock.build_model_cosmo(scen_tree, cost, dynamics, rms)
   if t > 1
@@ -164,19 +164,15 @@ for t = 1:MPC_N
   u = model.solver_state.z[model.solver_state_internal.u_inds[1:nu]]
   u_mosek = value.(model_mosek[:u][1:nu])
   u_gurobi = value.(model_gurobi[:u][1:nu])
-  # u_ipopt = value.(model_ipopt[:u][1:nu])
+  u_ipopt = value.(model_ipopt[:u][1:nu])
   u_cosmo = value.(model_cosmo[:u][1:nu])
 
-  w = 2#rand(1:d)
+  w = rand(1:d)
   x0 = dynamics.A[w] * x0 + dynamics.B[w] * u
   x0_mosek = dynamics.A[w] * x0_mosek + dynamics.B[w] * u_mosek
   x0_gurobi = dynamics.A[w] * x0_gurobi + dynamics.B[w] * u_gurobi
-  # x0_ipopt = dynamics.A[w] * x0_ipopt + dynamics.B[w] * u_ipopt
+  x0_ipopt = dynamics.A[w] * x0_ipopt + dynamics.B[w] * u_ipopt
   x0_cosmo = dynamics.A[w] * x0_cosmo + dynamics.B[w] * u_cosmo
-
-  # println(x0[1:4])
-  # println(x0_mosek[1:4])
-  # println("$(u[1:3]),    $(u_mosek[1:3]),     $(u_gurobi[1:3])")
 
   x0 = reshape(x0, nx)
   x0_mosek = reshape(x0_mosek, nx)
@@ -186,20 +182,17 @@ for t = 1:MPC_N
 end
 end
 
-# model_timings ./= M
-# mosek_timings ./= M
-# gurobi_timings ./= M
-# cosmo_timings ./= M
-
 model_timings_mean = mean(model_timings, dims=2)
 mosek_timings_mean = mean(mosek_timings, dims=2)
 gurobi_timings_mean = mean(gurobi_timings, dims=2)
 cosmo_timings_mean = mean(cosmo_timings, dims=2)
+ipopt_timings_mean = mean(ipopt_timings, dims=2)
 
 model_timings_std = std(model_timings, dims=2)
 mosek_timings_std = std(mosek_timings, dims=2)
 gurobi_timings_std = std(gurobi_timings, dims=2)
 cosmo_timings_std = std(cosmo_timings, dims=2)
+ipopt_timings_std = std(ipopt_timings, dims=2)
 
 ###########################################
 ###  Plot results
@@ -215,12 +208,11 @@ fig = plot(
 plot!(1:MPC_N, model_timings_mean, color=:red, labels=["SPOCK"])
 plot!(1:MPC_N, mosek_timings_mean, color=:blue, labels=["MOSEK"])
 plot!(1:MPC_N, gurobi_timings_mean, color=:green, labels=["GUROBI"])
-# plot!(1:MPC_N, ipopt_timings[1:MPC_N], color=:purple, labels=["IPOPT"])
+plot!(1:MPC_N, ipopt_timings_mean, color=:purple, labels=["IPOPT"])
 plot!(1:MPC_N, cosmo_timings_mean, color=:black, labels=["COSMO"])
 
-# savefig("examples/server_heat/output/mpc_simulation.pdf")
-
-# savefig("examples/server_heat/output/mpc_simulation.tikz")
+savefig("examples/server_heat/output/mpc_simulation.pdf")
+savefig("examples/server_heat/output/mpc_simulation.tikz")
 
 fig = plot(
   xlabel = "MPC time step",
@@ -232,9 +224,8 @@ fig = plot(
 plot!(1:MPC_N, model_timings_mean, color=:red, labels=["SPOCK"], ribbon=model_timings_std, fillalpha=0.1)
 plot!(1:MPC_N, mosek_timings_mean, color=:blue, labels=["MOSEK"], ribbon=mosek_timings_std, fillalpha=0.1)
 plot!(1:MPC_N, gurobi_timings_mean, color=:green, labels=["GUROBI"], ribbon=gurobi_timings_std, fillalpha=0.1)
-# plot!(1:MPC_N, ipopt_timings[1:MPC_N], color=:purple, labels=["IPOPT"])
+plot!(1:MPC_N, ipopt_timings_mean, color=:purple, labels=["IPOPT"], ribbon=ipopt_timings_std, fillalpha=0.1)
 plot!(1:MPC_N, cosmo_timings_mean, color=:black, labels=["COSMO"], ribbon=cosmo_timings_std, fillalpha=0.1)
 
-# savefig("examples/server_heat/output/mpc_simulation_ribbon.pdf")
-
-# savefig("examples/server_heat/output/mpc_simulation_ribbon.tikz")
+savefig("examples/server_heat/output/mpc_simulation_ribbon.pdf")
+savefig("examples/server_heat/output/mpc_simulation_ribbon.tikz")
