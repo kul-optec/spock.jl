@@ -61,6 +61,7 @@ struct GENERIC_PROBLEM_DEFINITIONV2{TF <: Real, TI <: Integer} <: PROBLEM_DEFINI
   rms :: Vector{RiskMeasureV2}
   cost:: Cost
   dynamics :: Dynamics{TF}
+  constraints :: UniformRectangle{TF, TI}
 end
 
 """
@@ -254,9 +255,11 @@ struct SP_IMPLICITL_STATE_INTERNAL{TI, TF, TM} <: SOLVER_STATE_INTERNAL
   v4_offset :: TI
   v5_offset :: TI
   v6_offset :: TI
+  v7_offset :: Union{TI, Nothing}
   v11_offset :: TI
   v12_offset :: TI
   v13_offset :: TI
+  v14_offset :: Union{TI, Nothing}
   proj_leafs_workspace :: Vector{TF}
   proj_nleafs_workspace :: Vector{TF}  
   # For SuperMann
@@ -340,6 +343,7 @@ function build_model(
   cost :: Cost, 
   dynamics :: Dynamics, 
   rms :: Union{Vector{RiskMeasureV1}, Vector{RiskMeasureV2}},
+  constraints :: ConvexConstraints,
   solver_options :: SolverOptions = SolverOptions(DYNAMICSL, CP)
 )
 """
@@ -360,7 +364,7 @@ elseif solver_options.dynamics == L_IMPLICIT
   if solver_options.algorithm == CP
     return build_model_cp_implicitl(scen_tree, cost, dynamics, rms)
   elseif solver_options.algorithm == SP
-    return build_model_sp_implicitl(scen_tree, cost, dynamics, rms)
+    return build_model_sp_implicitl(scen_tree, cost, dynamics, rms, constraints)
   end
 end
 

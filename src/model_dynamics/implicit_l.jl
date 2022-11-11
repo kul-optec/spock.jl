@@ -29,7 +29,7 @@ function get_nv(problem_definition :: GENERIC_PROBLEM_DEFINITIONV2)
   nv_5 = problem_definition.scen_tree.n - 1
   nv_6 = problem_definition.scen_tree.n - 1
 
-  # TODO: Box constraints
+  nv_7 = problem_definition.constraints.nΓ_nonleaf
 
   # TODO: Skipped 8, 9, 10 -> rename these
 
@@ -38,9 +38,9 @@ function get_nv(problem_definition :: GENERIC_PROBLEM_DEFINITIONV2)
   nv_12 = problem_definition.scen_tree.n_leaf_nodes
   nv_13 = problem_definition.scen_tree.n_leaf_nodes
 
-  # TODO: Box constraints
+  nv_14 = problem_definition.constraints.nΓ_leaf
 
-  return nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_11, nv_12, nv_13
+  return nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_7, nv_11, nv_12, nv_13, nv_14
 end
 
 function ricatti_offline(
@@ -193,13 +193,24 @@ function L!(model :: MODEL_IMPLICITL, z :: AbstractArray{TF, 1}, v :: AbstractAr
   n = model.problem_definition.scen_tree.n
   leaf_offset = model.problem_definition.scen_tree.leaf_node_min_index - 1
 
+  v2_offset = model.solver_state_internal.v2_offset
+  v3_offset = model.solver_state_internal.v3_offset
+  v4_offset = model.solver_state_internal.v4_offset
+  v5_offset = model.solver_state_internal.v5_offset
+  v6_offset = model.solver_state_internal.v6_offset
+  v7_offset = model.solver_state_internal.v7_offset
+  v11_offset = model.solver_state_internal.v11_offset
+  v12_offset = model.solver_state_internal.v12_offset
+  v13_offset = model.solver_state_internal.v13_offset
+  v14_offset = model.solver_state_internal.v14_offset
+
   # v1
   for k = 1:length(model.solver_state_internal.y_inds)
     v[k] = z[model.solver_state_internal.y_inds[k]]
   end
 
   # v2
-  v2_offset = length(model.solver_state_internal.y_inds)
+  # v2_offset = length(model.solver_state_internal.y_inds)
   for i = 1:n_non_leafs
     # v2 = s - b' * y
     # v[v2_offset + i] = z[model.solver_state_internal.s_inds[i]] - model.problem_definition.rms[i].b' * z[model.solver_state_internal.y_inds[(i - 1) * ny + 1 : i * ny]]
@@ -211,7 +222,7 @@ function L!(model :: MODEL_IMPLICITL, z :: AbstractArray{TF, 1}, v :: AbstractAr
   end
 
   # v3
-  v3_offset = v2_offset + n_non_leafs
+  # v3_offset = v2_offset + n_non_leafs
   for i = 1:n_non_leafs
     for j in model.problem_definition.scen_tree.child_mapping[i]
       j_ind = j - 1
@@ -224,7 +235,7 @@ function L!(model :: MODEL_IMPLICITL, z :: AbstractArray{TF, 1}, v :: AbstractAr
   end
 
   # v4
-  v4_offset = v3_offset + nx * (n - 1)
+  # v4_offset = v3_offset + nx * (n - 1)
   for i = 1:n_non_leafs
     for j in model.problem_definition.scen_tree.child_mapping[i]
       j_ind = j - 1
@@ -237,7 +248,7 @@ function L!(model :: MODEL_IMPLICITL, z :: AbstractArray{TF, 1}, v :: AbstractAr
   end
 
   # v5
-  v5_offset = v4_offset + nu * (n - 1)
+  # v5_offset = v4_offset + nu * (n - 1)
   node_counter = 0
   for i = 1:n_non_leafs
     for j in model.problem_definition.scen_tree.child_mapping[i]
@@ -249,7 +260,7 @@ function L!(model :: MODEL_IMPLICITL, z :: AbstractArray{TF, 1}, v :: AbstractAr
   end
 
   # v6
-  v6_offset = v5_offset + (n - 1)
+  # v6_offset = v5_offset + (n - 1)
   node_counter = 0
   for i = 1:n_non_leafs
     for j in model.problem_definition.scen_tree.child_mapping[i]
@@ -261,12 +272,19 @@ function L!(model :: MODEL_IMPLICITL, z :: AbstractArray{TF, 1}, v :: AbstractAr
   end
 
   # v7
-  # TODO: Box constraints
+  if ! isnothing(v7_offset)
+    update_nonleaf_constraints_dual!(
+      model.problem_definition.constraints, 
+      view(v, v7_offset + 1 : v7_offset + model.problem_definition.constraints.nΓ_nonleaf),
+      view(z, 1 : n_non_leafs * nx),
+      view(z, model.solver_state_internal.u_inds)
+    )
+  end
 
   # v8-v10 TODO: Rename
 
   # v11
-  v11_offset = v6_offset + (n - 1)
+  # v11_offset = v6_offset + (n - 1)
   for i = 1:n_leafs
     j = i + leaf_offset
     LA.mul!(model.solver_state_internal.mul_x_workspace, model.solver_state_internal.sqrtQN[i], view(z, model.solver_state_internal.x_inds[(j - 1) * nx + 1] : model.solver_state_internal.x_inds[j * nx]))
@@ -276,21 +294,27 @@ function L!(model :: MODEL_IMPLICITL, z :: AbstractArray{TF, 1}, v :: AbstractAr
   end
 
   # v12
-  v12_offset = v11_offset + n_leafs * nx
+  # v12_offset = v11_offset + n_leafs * nx
   for i = 1:n_leafs
     j = i + leaf_offset
     v[v12_offset + i] = 0.5 * z[model.solver_state_internal.s_inds[j]]
   end
 
   # v13
-  v13_offset = v12_offset + n_leafs
+  # v13_offset = v12_offset + n_leafs
   for i = 1:n_leafs
     j = i + leaf_offset
     v[v13_offset + i] = 0.5 * z[model.solver_state_internal.s_inds[j]]
   end
 
   # v14
-  # TODO: Box constraints
+  if ! isnothing(v14_offset)
+    update_leaf_constraints_dual!(
+      model.problem_definition.constraints, 
+      view(v, v14_offset + 1 : v14_offset + model.problem_definition.constraints.nΓ_leaf),
+      view(z, n_non_leafs * nx + 1 : n * nx)
+    )
+  end
 end
 
 function L_transpose!(model :: MODEL_IMPLICITL, z :: AbstractArray{TF, 1}, v :: AbstractArray{TF, 1}) where {TF <: Real}
@@ -312,22 +336,33 @@ function L_transpose!(model :: MODEL_IMPLICITL, z :: AbstractArray{TF, 1}, v :: 
   leaf_offset = model.problem_definition.scen_tree.leaf_node_min_index - 1
   n = model.problem_definition.scen_tree.n
 
-  v2_offset = length(model.solver_state_internal.y_inds)
-  v3_offset = v2_offset + n_non_leafs
-  v4_offset = v3_offset + nx * (n - 1)
-  v5_offset = v4_offset + nu * (n - 1)
-  v6_offset = v5_offset + (n - 1)
-  v11_offset = v6_offset + (n - 1)
-  v12_offset = v11_offset + n_leafs * nx
-  v13_offset = v12_offset + n_leafs
+  v2_offset = model.solver_state_internal.v2_offset
+  v3_offset = model.solver_state_internal.v3_offset
+  v4_offset = model.solver_state_internal.v4_offset
+  v5_offset = model.solver_state_internal.v5_offset
+  v6_offset = model.solver_state_internal.v6_offset
+  v7_offset = model.solver_state_internal.v7_offset
+  v11_offset = model.solver_state_internal.v11_offset
+  v12_offset = model.solver_state_internal.v12_offset
+  v13_offset = model.solver_state_internal.v13_offset
+  v14_offset = model.solver_state_internal.v14_offset
 
   # x for non leaf nodes
-  for i = 1:n_non_leafs
-    # Set x = 0
-    for j = (i - 1) * nx + 1 : i * nx
-      z[model.solver_state_internal.x_inds[j]] = 0.
+  if ! isnothing(v7_offset) # Set x = Γ' v7
+    update_nonleaf_constraints_primal_x!(
+      model.problem_definition.constraints,
+      view(z, model.solver_state_internal.x_inds[1] : model.solver_state_internal.x_inds[1] + nx * n_non_leafs),
+      view(v, v7_offset + 1 : v7_offset + model.problem_definition.constraints.nΓ_nonleaf)
+    )
+  else # Set x = 0
+    for i = 1:n_non_leafs
+      for j = (i - 1) * nx + 1 : i * nx
+        z[model.solver_state_internal.x_inds[j]] = 0.
+      end
     end
-    # Add all sqrt(Q) * v3 terms
+  end
+  # Add all sqrt(Q) * v3 terms
+  for i = 1:n_non_leafs
     for j in model.problem_definition.scen_tree.child_mapping[i]
       j_ind = j - 1
       LA.mul!(model.solver_state_internal.mul_x_workspace, model.solver_state_internal.sqrtQ[j_ind], view(v, v3_offset + (j_ind - 1) * nx + 1 : v3_offset + j_ind * nx))
@@ -338,20 +373,43 @@ function L_transpose!(model :: MODEL_IMPLICITL, z :: AbstractArray{TF, 1}, v :: 
   end
 
   # x for leaf nodes
+  if ! isnothing(v14_offset)
+    update_leaf_constraints_primal!(
+      model.problem_definition.constraints,
+      view(z, nx * n_non_leafs + 1 : model.solver_state_internal.x_inds[end]),
+      view(v, v14_offset + 1 : v14_offset + model.problem_definition.constraints.nΓ_leaf)
+    )
+  else
+    for i = 1:n_leafs
+      for j = (i + leaf_offset - 1) * nx + 1 : (i + leaf_offset) * nx
+        z[model.solver_state_internal.x_inds[j]] = 0.
+      end
+    end
+  end
+  # Add sqrt(Q) * v11 term
   for i = 1:n_leafs
     j = leaf_offset + i
     LA.mul!(model.solver_state_internal.mul_x_workspace, model.solver_state_internal.sqrtQN[i], view(v, v11_offset + (i-1) * nx + 1 : v11_offset + i * nx))
-    copyto!(z, model.solver_state_internal.x_inds[(j-1) * nx + 1], model.solver_state_internal.mul_x_workspace, 1, nx)
-    # z[model.solver_state_internal.x_inds[(j-1) * nx + 1 : j * nx]] = model.solver_state_internal.sqrtQN[i] * v[v11_offset + (i-1) * nx + 1 : v11_offset + i * nx]
+    for k = 1:nx
+      z[model.solver_state_internal.x_inds[(j-1) * nx + k]] += model.solver_state_internal.mul_x_workspace[k]
+    end
   end
 
   # u (u is only defined for non leaf nodes)
-  for i = 1:n_non_leafs
-    # Set u = 0
-    for j = (i - 1) * nu + 1 : i * nu
-      z[model.solver_state_internal.u_inds[j]] = 0.
+  if ! isnothing(v7_offset) # Set u = Γ' * v7
+    update_nonleaf_constraints_primal_u!(
+      model.problem_definition.constraints,
+      view(z, model.solver_state_internal.u_inds),
+      view(v, v7_offset + 1 : v7_offset + model.problem_definition.constraints.nΓ_nonleaf)
+    )
+  else # Set u = 0
+    for i = 1:n_non_leafs
+      for j = (i - 1) * nu + 1 : i * nu
+        z[model.solver_state_internal.u_inds[j]] = 0.
+      end
     end
-    # Add all sqrt(R) * v4 terms
+  end # Add all sqrt(R) * v4 terms
+  for i = 1:n_non_leafs
     for j in model.problem_definition.scen_tree.child_mapping[i]
       j_ind = j - 1
       LA.mul!(model.solver_state_internal.mul_u_workspace, model.solver_state_internal.sqrtR[j_ind], view(v, v4_offset + (j_ind - 1) * nu + 1 : v4_offset + j_ind * nu))
@@ -701,6 +759,7 @@ function project_on_leaf_constraints!(
   v11_offset = model.solver_state_internal.v11_offset
   v12_offset = model.solver_state_internal.v12_offset
   v13_offset = model.solver_state_internal.v13_offset
+  v14_offset = model.solver_state_internal.v14_offset
 
   ####
   # !! Mathoptinterface defines the SOC by the vector (t, x), not (x, t)
@@ -740,6 +799,14 @@ function project_on_leaf_constraints!(
     # v12
     arg[v12_offset + i] = model.solver_state_internal.proj_leafs_workspace[nx + 2]
   end
+
+  ## V14
+  if ! isnothing(v14_offset)
+    project_onto_leaf_constraints!(
+      model.problem_definition.constraints, 
+      view(arg, v14_offset + 1 : v14_offset + model.problem_definition.constraints.nΓ_leaf)
+    )
+  end
 end
 
 function project_on_nonleaf_constraints!(
@@ -759,6 +826,7 @@ function project_on_nonleaf_constraints!(
   v4_offset = model.solver_state_internal.v4_offset
   v5_offset = model.solver_state_internal.v5_offset
   v6_offset = model.solver_state_internal.v6_offset
+  v7_offset = model.solver_state_internal.v7_offset
   n_non_leafs = model.problem_definition.scen_tree.n_non_leaf_nodes
 
   ### v1
@@ -829,6 +897,14 @@ function project_on_nonleaf_constraints!(
       # v5
       arg[v5_offset + j_ind]= model.solver_state_internal.proj_nleafs_workspace[1 + nx + nu + 1]
     end
+  end
+
+  # v7
+  if ! isnothing(v7_offset)
+    project_onto_nonleaf_constraints!(
+      model.problem_definition.constraints, 
+      view(arg, v7_offset + 1 : v7_offset + model.problem_definition.constraints.nΓ_nonleaf),
+    )
   end
 end
 
