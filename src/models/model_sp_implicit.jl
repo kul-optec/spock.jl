@@ -103,8 +103,8 @@ function build_model_sp_implicitl(
     [-Inf, -Inf]
   )
 
-  MAX_BROYDEN_K = 20
-  ANDERSON_BUFFER_SIZE = 10
+  MAX_BROYDEN_K = 1 # todo
+  ANDERSON_BUFFER_SIZE = 3
 
   # TODO: Support more general cases
   ny = length(problem_definition.rms[1].b)
@@ -124,7 +124,7 @@ function build_model_sp_implicitl(
     map(x -> sqrt(x), cost.QN),
     zeros(nz),
     zeros(nv),
-    Ms,
+    # Ms,
     map(
       x -> LA.svd(LA.nullspace(x)).U * LA.pinv(LA.svd(LA.nullspace(x)).U),
       Ms
@@ -169,24 +169,24 @@ function build_model_sp_implicitl(
     zeros(nz),
     zeros(nz),
     zeros(nv),
-    zeros(nz),
-    zeros(nv),
-    zeros(nz),
-    zeros(nv),
-    zeros(nz),
-    zeros(nv),
-    zeros(nz),
-    zeros(nv),
-    zeros(nz * MAX_BROYDEN_K),
-    zeros(nv * MAX_BROYDEN_K),
-    zeros(nz * MAX_BROYDEN_K),
-    zeros(nv * MAX_BROYDEN_K),
-    zeros(nz * MAX_BROYDEN_K),
-    zeros(nv * MAX_BROYDEN_K),
+    # zeros(nz),
+    # zeros(nv),
+    # zeros(nz),
+    # zeros(nv),
+    # zeros(nz),
+    # zeros(nv),
+    # zeros(nz),
+    # zeros(nv),
+    # zeros(nz * MAX_BROYDEN_K),
+    # zeros(nv * MAX_BROYDEN_K),
+    # zeros(nz * MAX_BROYDEN_K),
+    # zeros(nv * MAX_BROYDEN_K),
+    # zeros(nz * MAX_BROYDEN_K),
+    # zeros(nv * MAX_BROYDEN_K),
     ones(nz),
     ones(nv),
-    ones(nz),
-    ones(nv),
+    # ones(nz),
+    # ones(nv),
     # Anderson
     zeros(nz + nv, ANDERSON_BUFFER_SIZE),
     zeros(nz + nv, ANDERSON_BUFFER_SIZE),
@@ -194,6 +194,7 @@ function build_model_sp_implicitl(
     zeros(nv),
     zeros(nz),
     zeros(nv),
+    zeros(nz + nv),
   )
 
   return MODEL_SP_IMPLICITL(

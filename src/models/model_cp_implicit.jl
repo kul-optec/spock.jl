@@ -3,6 +3,7 @@ function build_model_cp_implicitl(
   cost :: CostV2, 
   dynamics :: Dynamics, 
   rms :: Vector{RiskMeasureV2},
+  constraints :: ConvexConstraints
 )
 
   ### Problem definition
@@ -21,6 +22,7 @@ function build_model_cp_implicitl(
     rms,
     cost,
     dynamics,
+    constraints
   )
 
   ### Solver state
@@ -30,15 +32,15 @@ function build_model_cp_implicitl(
   z = zeros(nz); zbar = zeros(nz)
 
   # L
-  nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_11, nv_12, nv_13 = get_nv(problem_definition)
-  nv = sum([nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_11, nv_12, nv_13])
+  nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_7, nv_11, nv_12, nv_13, nv_14 = get_nv(problem_definition)
+  nv = sum([nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_7, nv_11, nv_12, nv_13, nv_14])
 
   v5_inds = collect(sum([nv_1, nv_2, nv_3, nv_4]) + 1 : sum([nv_1, nv_2, nv_3, nv_4, nv_5]))
   v6_inds = collect(sum([nv_1, nv_2, nv_3, nv_4, nv_5]) + 1 : sum([nv_1, nv_2, nv_3, nv_4, nv_5, nv_6]))
-  v12_inds = collect((sum([nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_11]) + 1 :
-    sum([nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_11, nv_12])))
-  v13_inds = collect((sum([nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_11, nv_12]) + 1 :
-    sum([nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_11, nv_12, nv_13])))
+  v12_inds = collect((sum([nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_7, nv_11]) + 1 :
+    sum([nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_7, nv_11, nv_12])))
+  v13_inds = collect((sum([nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_7, nv_11, nv_12]) + 1 :
+    sum([nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_7, nv_11, nv_12, nv_13])))
 
 
   # Offsets
@@ -51,9 +53,11 @@ function build_model_cp_implicitl(
   v4_offset = v3_offset + nx * (n - 1)
   v5_offset = v4_offset + nu * (n - 1)
   v6_offset = v5_offset + (n - 1)
-  v11_offset = v6_offset + (n - 1)
+  v7_offset = v6_offset + (n - 1)
+  v11_offset = v7_offset + constraints.nΓ_nonleaf
   v12_offset = v11_offset + n_leafs * nx
   v13_offset = v12_offset + n_leafs
+  v14_offset = v13_offset + n_leafs
 
   # Todo: L norm must be computed efficiently!
   L_norm = 10.
@@ -141,9 +145,11 @@ function build_model_cp_implicitl(
     v4_offset,
     v5_offset,
     v6_offset,
+    v7_offset,
     v11_offset,
     v12_offset,
     v13_offset,
+    v14_offset,
     zeros(nx + 2),
     zeros(nx + nu + 2)
   )

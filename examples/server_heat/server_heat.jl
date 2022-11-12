@@ -11,6 +11,8 @@ nx === nu
 
 """
 
+  nu = nx
+
   # if (d > 2)
   #   error("Implement this model for d > 2.")
   #   # More specifically, p_ref should be adapted, as well as the dynamics
@@ -92,7 +94,20 @@ nx === nu
   end
   rms = spock.get_uniform_rms_avar_v2(p_ref, alpha, d, N);
 
-  return scen_tree, cost, dynamics, rms
+  constraints = spock.UniformRectangle(
+    -1.,
+    1.,
+    -1.5,
+    1.5,
+    scen_tree.n_leaf_nodes * nx,
+    scen_tree.n_non_leaf_nodes * (nx + nu),
+    nx,
+    nu,
+    scen_tree.n_leaf_nodes,
+    scen_tree.n_non_leaf_nodes
+  )
+
+  return scen_tree, cost, dynamics, rms, constraints
 end
 
 function get_server_heat_specs(
@@ -189,5 +204,18 @@ nx === nu
   end
   rms = spock.get_uniform_rms_avar_v2(p_ref, alpha, d, N);
 
-  return scen_tree, cost, dynamics, rms
+  constraints = spock.UniformRectangle(
+    -1.,
+    1.,
+    -1.5,
+    1.5,
+    scen_tree.n_leaf_nodes * nx,
+    scen_tree.n_non_leaf_nodes * (nx + nu),
+    nx,
+    nu,
+    scen_tree.n_leaf_nodes,
+    scen_tree.n_non_leaf_nodes
+  )
+
+  return scen_tree, cost, dynamics, rms, constraints
 end
