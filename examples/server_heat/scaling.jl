@@ -7,7 +7,7 @@ include("server_heat.jl")
 pgfplotsx()
 
 M = 1
-N_max = 12
+N_max = 15
 # Dimensions of state and input vectors
 nx = 50
 x0 = [i <= 2 ? .1 : .1 for i = 1:nx]
@@ -106,5 +106,5 @@ plot!(3:length(mosek_timings) + 2, mosek_timings, color=:blue, yaxis=:log, label
 # plot!(3:length(sedumi_timings) + 2, sedumi_timings, color=:orange, yaxis=:log, labels=["SEDUMI"])
 # plot!(3:length(cosmo_timings) + 2, cosmo_timings, color=:black, yaxis=:log, labels=["COSMO"])
 
-# savefig("examples/server_heat/output/scaling.pdf")
-# savefig("examples/server_heat/output/scaling.tikz")
+savefig("examples/server_heat/output/scaling.pdf")
+savefig("examples/server_heat/output/scaling.tikz")

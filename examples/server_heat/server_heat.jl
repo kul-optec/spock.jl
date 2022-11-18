@@ -24,15 +24,15 @@ nx === nu
   cost = spock.CostV2(
     # Q matrices
     collect([
-      Matrix(LA.I(nx) * 1e-1) for i in 1:scen_tree.n - 1
+      LA.I(nx) * 1e-1 for i in 1:scen_tree.n - 1
     ]),
     # R matrices
     collect([
-      Matrix(LA.I(nx) * 1.) for i in 1:scen_tree.n - 1
+      LA.I(nx) * 1. for i in 1:scen_tree.n - 1
     ]),
     # QN matrices
     collect([
-      Matrix(LA.I(nx) * 1e-1) for i in 1:scen_tree.n_leaf_nodes
+      LA.I(nx) * 1e-1 for i in 1:scen_tree.n_leaf_nodes
     ])
   )
 

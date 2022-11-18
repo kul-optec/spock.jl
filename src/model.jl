@@ -234,14 +234,14 @@ struct SP_IMPLICITL_STATE_INTERNAL{TI, TF, TM} <: SOLVER_STATE_INTERNAL
   spock_mul_buffer_z :: Vector{TF}
   spock_mul_buffer_v :: Vector{TF}
   # M :: Vector{TM} # TODO: Unnecessary?
-  ls_matrix :: Vector{TM}
+  ls_matrix :: Vector{Matrix{TF}}
   ls_b :: Vector{TF}
   ls_b2 :: Vector{TF}
   # Ricatti
-  P :: Vector{TM}
-  K :: Vector{TM}
-  R_chol :: Vector{LA.Cholesky{TF, TM}}
-  ABK :: Vector{TM}
+  P :: Vector{Matrix{TF}}
+  K :: Vector{Matrix{TF}}
+  R_chol :: Vector{LA.Cholesky{TF, Matrix{TF}}}
+  ABK :: Vector{Matrix{TF}}
   ric_q :: Vector{TF}
   ric_d :: Vector{TF}
   sum_for_d :: Vector{TF}
