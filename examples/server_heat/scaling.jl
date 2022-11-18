@@ -28,12 +28,12 @@ for m = 1:M
 
     scen_tree, cost, dynamics, rms, constraints = get_server_heat_specs(N, nx, d)
 
-    # model = spock.build_model(scen_tree, cost, dynamics, rms, constraints, spock.SolverOptions(spock.L_IMPLICIT, spock.SP))
+    model = spock.build_model(scen_tree, cost, dynamics, rms, constraints, spock.SolverOptions(spock.L_IMPLICIT, spock.SP))
 
-    # model_mosek = spock.build_model_mosek(scen_tree, cost, dynamics, rms, constraints)
-    # set_optimizer_attribute(model_mosek, "MSK_DPAR_INTPNT_TOL_REL_GAP", TOL)
-    # set_optimizer_attribute(model_mosek, "MSK_DPAR_INTPNT_CO_TOL_REL_GAP", TOL)
-    # set_optimizer_attribute(model_mosek, "MSK_DPAR_INTPNT_QO_TOL_REL_GAP", TOL)
+    model_mosek = spock.build_model_mosek(scen_tree, cost, dynamics, rms, constraints)
+    set_optimizer_attribute(model_mosek, "MSK_DPAR_INTPNT_TOL_REL_GAP", TOL)
+    set_optimizer_attribute(model_mosek, "MSK_DPAR_INTPNT_CO_TOL_REL_GAP", TOL)
+    set_optimizer_attribute(model_mosek, "MSK_DPAR_INTPNT_QO_TOL_REL_GAP", TOL)
 
     # model_gurobi = spock.build_model_gurobi(scen_tree, cost, dynamics, rms, constraints)
     # set_optimizer_attribute(model_gurobi, "FeasibilityTol", TOL)
@@ -42,7 +42,7 @@ for m = 1:M
     # model_ipopt = spock.build_model_ipopt(scen_tree, cost, dynamics, rms, constraints)
     # set_optimizer_attribute(model_ipopt, "tol", TOL)
 
-    model_sedumi = spock.build_model_sedumi(scen_tree, cost, dynamics, rms, constraints)
+    # model_sedumi = spock.build_model_sedumi(scen_tree, cost, dynamics, rms, constraints)
 
     # model_cosmo = spock.build_model_cosmo(scen_tree, cost, dynamics, rms, constraints)
     # set_optimizer_attribute(model_cosmo, "eps_abs", TOL)
@@ -54,12 +54,12 @@ for m = 1:M
 
     println("solving...")
 
-    # if maximum(model_timings) <= t_max
-    #   model_timings[N - 2] += @elapsed spock.solve_model!(model, x0, tol=TOL)
-    # end
-    # if maximum(mosek_timings) <= t_max
-    #   mosek_timings[N - 2] += @elapsed spock.solve_model(model_mosek, x0)
-    # end
+    if maximum(model_timings) <= t_max
+      model_timings[N - 2] += @elapsed spock.solve_model!(model, x0, tol=TOL)
+    end
+    if maximum(mosek_timings) <= t_max
+      mosek_timings[N - 2] += @elapsed spock.solve_model(model_mosek, x0)
+    end
     # if maximum(gurobi_timings) <= t_max
     #   gurobi_timings[N - 2] += @elapsed spock.solve_model(model_gurobi, x0)
     # end
@@ -69,9 +69,9 @@ for m = 1:M
     # if maximum(cosmo_timings) <= t_max
     #   cosmo_timings[N - 2] += @elapsed spock.solve_model(model_cosmo, x0)
     # end
-    if maximum(sedumi_timings) <= t_max
-      sedumi_timings[N - 2] += @elapsed spock.solve_model(model_sedumi, x0)
-    end
+    # if maximum(sedumi_timings) <= t_max
+    #   sedumi_timings[N - 2] += @elapsed spock.solve_model(model_sedumi, x0)
+    # end
 
     # println("SPOCK: $(model.solver_state.z[model.solver_state_internal.s_inds[1]]), MOSEK: $(value(model_mosek[:s][1]))")
 
@@ -99,12 +99,12 @@ fig = plot(
 # sedumi_timings = filter(>(0.), sedumi_timings)
 # cosmo_timings = filter(>(0.), cosmo_timings)
 
-# plot!(3:length(model_timings) + 2, model_timings, color=:red, yaxis=:log, labels=["SPOCK"])
-# plot!(3:length(mosek_timings) + 2, mosek_timings, color=:blue, yaxis=:log, labels=["MOSEK"])
-plot!(3:length(gurobi_timings) + 2, gurobi_timings, color=:green, yaxis=:log, labels=["GUROBI"])
+plot!(3:length(model_timings) + 2, model_timings, color=:red, yaxis=:log, labels=["SPOCK"])
+plot!(3:length(mosek_timings) + 2, mosek_timings, color=:blue, yaxis=:log, labels=["MOSEK"])
+# plot!(3:length(gurobi_timings) + 2, gurobi_timings, color=:green, yaxis=:log, labels=["GUROBI"])
 # plot!(3:length(ipopt_timings) + 2, ipopt_timings, color=:purple, yaxis=:log, labels=["IPOPT"])
-plot!(3:length(sedumi_timings) + 2, sedumi_timings, color=:orange, yaxis=:log, labels=["SEDUMI"])
-plot!(3:length(cosmo_timings) + 2, cosmo_timings, color=:black, yaxis=:log, labels=["COSMO"])
+# plot!(3:length(sedumi_timings) + 2, sedumi_timings, color=:orange, yaxis=:log, labels=["SEDUMI"])
+# plot!(3:length(cosmo_timings) + 2, cosmo_timings, color=:black, yaxis=:log, labels=["COSMO"])
 
-savefig("examples/server_heat/output/scaling.pdf")
-savefig("examples/server_heat/output/scaling.tikz")
+# savefig("examples/server_heat/output/scaling.pdf")
+# savefig("examples/server_heat/output/scaling.tikz")

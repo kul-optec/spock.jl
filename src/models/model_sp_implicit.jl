@@ -195,6 +195,9 @@ function build_model_sp_implicitl(
     zeros(nz),
     zeros(nv),
     zeros(nz + nv),
+    zeros(nz + nv, ANDERSON_BUFFER_SIZE),
+    LA.UpperTriangular(LA.Matrix(LA.I(ANDERSON_BUFFER_SIZE) * 1.)),
+    zeros(ANDERSON_BUFFER_SIZE),
   )
 
   return MODEL_SP_IMPLICITL(
@@ -214,8 +217,8 @@ function generate_qnewton_direction!(
 
   # println("TODO: Function not implemented for this model.")
   # return restarted_broyden!(model, k, alpha1, alpha2)
-  
-  anderson!(model)
+  k += 1
+  anderson!(model, k)
   return k 
 end
 

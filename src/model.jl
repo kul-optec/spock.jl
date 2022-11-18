@@ -305,6 +305,9 @@ struct SP_IMPLICITL_STATE_INTERNAL{TI, TF, TM} <: SOLVER_STATE_INTERNAL
   delta_rz_old :: Vector{TF}
   delta_rv_old :: Vector{TF}
   aa_wsp :: Vector{TF}
+  aa_Q :: Matrix{TF}
+  aa_R :: LA.UpperTriangular{TF, Matrix{TF}}
+  aa_gamma :: Vector{TF}
 end
 
 struct MODEL_SP_IMPLICITL{TI, TF, TM} <: CUSTOM_SOLVER_MODEL
