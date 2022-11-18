@@ -121,7 +121,7 @@ function build_model_cp_implicitl(
     map(x -> sqrt(x), cost.QN),
     zeros(nz),
     zeros(nv),
-    Ms,
+    # Ms,
     map(
       x -> LA.svd(LA.nullspace(x)).U * LA.pinv(LA.svd(LA.nullspace(x)).U),
       Ms

@@ -362,10 +362,11 @@ function should_terminate!(
   res = false
 
   if verbose === LOG
-    copyto!(model.solver_state.xi, model.solver_state.xi_1)
-    spock_mul!(model, model.solver_state.xi, true, model.solver_state.xi_2, 1., 1.)
+    # copyto!(model.solver_state.xi, model.solver_state.xi_1)
+    # spock_mul!(model, model.solver_state.xi, true, model.solver_state.xi_2, 1., 1.)
 
-    xi = LA.norm(model.solver_state.xi, Inf)
+    # xi = LA.norm(model.solver_state.xi, Inf)
+    xi = max(xi_1, xi_2)
 
     open("examples/output/xi_sp.dat", "a") do io
       writedlm(io, xi)

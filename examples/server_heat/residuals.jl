@@ -10,7 +10,7 @@ pgfplotsx()
 N = 7; d = 2
 
 # Dimensions of state and input vectors
-nx = 10
+nx = 5
 
 TOL = 1e-5
 
