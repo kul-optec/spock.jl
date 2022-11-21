@@ -60,8 +60,22 @@ p_ref = [0.3, 0.7]; alpha=0.95
 rms = spock.get_uniform_rms_avar_v2(p_ref, alpha, d, N);
 # rms = spock.get_nonuniform_rms_avar_v2(d, N);
 
+# Box constraints
+constraints = spock.UniformRectangle(
+  -1.,
+  1.,
+  -1.,
+  1.,
+  scen_tree.n_leaf_nodes * nx,
+  scen_tree.n_non_leaf_nodes * (nx + nu),
+  nx,
+  nu,
+  scen_tree.n_leaf_nodes,
+  scen_tree.n_non_leaf_nodes
+)
+
 factor = 1e0
 
-cp_model = spock.build_model(scen_tree, cost, dynamics, rms, spock.SolverOptions(spock.L_IMPLICIT, spock.SP))
+cp_model = spock.build_model(scen_tree, cost, dynamics, rms, constraints, spock.SolverOptions(spock.L_IMPLICIT, spock.SP))
 # @profview spock.solve_model!(cp_model, [0.1, .1], tol=1e-3)
 @time spock.solve_model!(cp_model, [0.1, .1] / factor, tol=1e-3 / factor)

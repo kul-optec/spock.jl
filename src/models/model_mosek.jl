@@ -81,6 +81,43 @@ function impose_dynamics(model :: Model, problem_definition :: GENERIC_PROBLEM_D
   )
 end
 
+function impose_box_constraints(
+  model :: Model,
+  problem_definition :: GENERIC_PROBLEM_DEFINITIONV2,
+)
+  x = model[:x]
+  u = model[:u]
+
+  x_min = problem_definition.constraints.x_min
+  x_max = problem_definition.constraints.x_max
+  u_min = problem_definition.constraints.u_min
+  u_max = problem_definition.constraints.u_max
+
+  @constraint(
+    model,
+    x_box_min[i=1:problem_definition.scen_tree.n],
+    x[node_to_x(problem_definition, i)] .>= x_min
+  )
+
+  @constraint(
+    model,
+    x_box_max[i=1:problem_definition.scen_tree.n],
+    x[node_to_x(problem_definition, i)] .<= x_max
+  )
+
+  @constraint(
+    model,
+    u_box_min[i=1:problem_definition.scen_tree.n_non_leaf_nodes],
+    u[node_to_u(problem_definition, i)] .>= u_min
+  )
+
+  @constraint(
+    model,
+    u_box_max[i=1:problem_definition.scen_tree.n_non_leaf_nodes],
+    u[node_to_u(problem_definition, i)] .<= u_max
+  )
+end
+
 #### Risk constraints
 
 function add_risk_epi_constraint(model::Model, r::RiskMeasureV1, x_current, x_next::Vector, y)
@@ -209,6 +246,7 @@ function build_model_mosek(
   cost :: CostV2, 
   dynamics :: Dynamics, 
   rms :: Vector{RiskMeasureV2},
+  constraints :: UniformRectangle
 )
 
   ### Problem definition
@@ -227,6 +265,7 @@ function build_model_mosek(
     rms,
     cost,
     dynamics,
+    constraints
   )
 
   # Define model, primal variables, epigraph variables and objective
@@ -249,6 +288,8 @@ function build_model_mosek(
   # # Impose risk measure epigraph constraints
   add_risk_epi_constraints(model, problem_definition)
 
+  impose_box_constraints(model, problem_definition)
+
   return model
 
 end
@@ -258,6 +299,7 @@ function build_model_gurobi(
   cost :: CostV2, 
   dynamics :: Dynamics, 
   rms :: Vector{RiskMeasureV2},
+  constraints :: UniformRectangle
 )
 
   ### Problem definition
@@ -276,6 +318,7 @@ function build_model_gurobi(
     rms,
     cost,
     dynamics,
+    constraints
   )
 
   # Define model, primal variables, epigraph variables and objective
@@ -298,6 +341,8 @@ function build_model_gurobi(
   # # Impose risk measure epigraph constraints
   add_risk_epi_constraints(model, problem_definition)
 
+  impose_box_constraints(model, problem_definition)
+
   return model
 
 end
@@ -307,6 +352,7 @@ function build_model_ipopt(
   cost :: CostV2, 
   dynamics :: Dynamics, 
   rms :: Vector{RiskMeasureV2},
+  constraints :: UniformRectangle
 )
 
   ### Problem definition
@@ -325,6 +371,7 @@ function build_model_ipopt(
     rms,
     cost,
     dynamics,
+    constraints
   )
 
   # Define model, primal variables, epigraph variables and objective
@@ -347,6 +394,8 @@ function build_model_ipopt(
   # # Impose risk measure epigraph constraints
   add_risk_epi_constraints(model, problem_definition)
 
+  impose_box_constraints(model, problem_definition)
+
   return model
 
 end
@@ -356,6 +405,7 @@ function build_model_scs(
   cost :: CostV2, 
   dynamics :: Dynamics, 
   rms :: Vector{RiskMeasureV2},
+  constraints :: UniformRectangle
 )
 
   ### Problem definition
@@ -374,6 +424,7 @@ function build_model_scs(
     rms,
     cost,
     dynamics,
+    constraints
   )
 
   # Define model, primal variables, epigraph variables and objective
@@ -396,6 +447,8 @@ function build_model_scs(
   # # Impose risk measure epigraph constraints
   add_risk_epi_constraints(model, problem_definition)
 
+  impose_box_constraints(model, problem_definition)
+
   return model
 
 end
@@ -405,6 +458,7 @@ function build_model_sdpt3(
   cost :: CostV2, 
   dynamics :: Dynamics, 
   rms :: Vector{RiskMeasureV2},
+  constraints :: UniformRectangle
 )
 
   ### Problem definition
@@ -423,6 +477,7 @@ function build_model_sdpt3(
     rms,
     cost,
     dynamics,
+    constraints
   )
 
   # Define model, primal variables, epigraph variables and objective
@@ -445,6 +500,8 @@ function build_model_sdpt3(
   # # Impose risk measure epigraph constraints
   add_risk_epi_constraints(model, problem_definition)
 
+  impose_box_constraints(model, problem_definition)
+
   return model
 
 end
@@ -454,6 +511,7 @@ function build_model_sedumi(
   cost :: CostV2, 
   dynamics :: Dynamics, 
   rms :: Vector{RiskMeasureV2},
+  constraints :: UniformRectangle
 )
 
   ### Problem definition
@@ -472,6 +530,7 @@ function build_model_sedumi(
     rms,
     cost,
     dynamics,
+    constraints
   )
 
   # Define model, primal variables, epigraph variables and objective
@@ -494,6 +553,8 @@ function build_model_sedumi(
   # # Impose risk measure epigraph constraints
   add_risk_epi_constraints(model, problem_definition)
 
+  impose_box_constraints(model, problem_definition)
+
   return model
 
 end
@@ -503,6 +564,7 @@ function build_model_cosmo(
   cost :: CostV2, 
   dynamics :: Dynamics, 
   rms :: Vector{RiskMeasureV2},
+  constraints :: UniformRectangle
 )
 
   ### Problem definition
@@ -521,6 +583,7 @@ function build_model_cosmo(
     rms,
     cost,
     dynamics,
+    constraints
   )
 
   # Define model, primal variables, epigraph variables and objective
@@ -542,6 +605,8 @@ function build_model_cosmo(
 
   # # Impose risk measure epigraph constraints
   add_risk_epi_constraints(model, problem_definition)
+
+  impose_box_constraints(model, problem_definition)
 
   return model
 

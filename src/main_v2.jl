@@ -8,6 +8,7 @@ include("cost.jl")
 include("dynamics.jl")
 include("scenario_tree.jl")
 include("risk_measures.jl")
+include("constraints.jl")
 include("model.jl")
 
 ## The supported algorithms
@@ -64,6 +65,20 @@ dynamics = Dynamics(A, B)
 p_ref = [0.3, 0.7]; alpha=0.95
 rms = get_uniform_rms_avar_v2(p_ref, alpha, d, N);
 
+# Box constraints
+constraints = UniformRectangle(
+  -1.,
+  1.,
+  -1.,
+  1.,
+  scen_tree.n_leaf_nodes * nx,
+  scen_tree.n_non_leaf_nodes * (nx + nu),
+  nx,
+  nu,
+  scen_tree.n_leaf_nodes,
+  scen_tree.n_non_leaf_nodes
+)
+
 ###########################
 ### Solving the given problem
 ###########################
@@ -71,17 +86,17 @@ rms = get_uniform_rms_avar_v2(p_ref, alpha, d, N);
 # cp_model = build_model(scen_tree, cost, dynamics, rms, SolverOptions(L_IMPLICIT, CP))
 # solve_model!(cp_model, [0.1, .1])
 
-sp_model = build_model(scen_tree, cost, dynamics, rms, SolverOptions(L_IMPLICIT, SP))
+sp_model = build_model(scen_tree, cost, dynamics, rms, constraints, SolverOptions(L_IMPLICIT, SP))
 @time solve_model!(sp_model, [.1, .1], tol=1e-3)
 # typeof(sp_model)
 
-x = sp_model.solver_state.z[sp_model.solver_state_internal.x_inds]
-u = sp_model.solver_state.z[sp_model.solver_state_internal.u_inds]
-s = sp_model.solver_state.z[sp_model.solver_state_internal.s_inds]
-tau = sp_model.solver_state.z[sp_model.solver_state_internal.tau_inds]
-y = sp_model.solver_state.z[sp_model.solver_state_internal.y_inds]
+# x = sp_model.solver_state.z[sp_model.solver_state_internal.x_inds]
+# u = sp_model.solver_state.z[sp_model.solver_state_internal.u_inds]
+# s = sp_model.solver_state.z[sp_model.solver_state_internal.s_inds]
+# tau = sp_model.solver_state.z[sp_model.solver_state_internal.tau_inds]
+# y = sp_model.solver_state.z[sp_model.solver_state_internal.y_inds]
 
-reference_model = build_model_mosek(scen_tree, cost, dynamics, rms)
+# reference_model = build_model_mosek(scen_tree, cost, dynamics, rms)
 # for i in eachindex(x)
 #   set_start_value(reference_model[:x][i], x[i])
 # end
@@ -102,7 +117,7 @@ reference_model = build_model_mosek(scen_tree, cost, dynamics, rms)
 # set_optimizer_attribute(reference_model, "MSK_DPAR_INTPNT_TOL_REL_GAP", TOL)
 # set_optimizer_attribute(reference_model, "MSK_DPAR_INTPNT_CO_TOL_REL_GAP", TOL)
 # set_optimizer_attribute(reference_model, "MSK_DPAR_INTPNT_QO_TOL_REL_GAP", TOL)
-@time solve_model(reference_model, [0.1, .1])
+# @time solve_model(reference_model, [0.1, .1])
 
-println(sp_model.solver_state.z[1:10])
-println(value.(reference_model[:x][1:10]))
+# println(sp_model.solver_state.z[1:10])
+# println(value.(reference_model[:x][1:10]))

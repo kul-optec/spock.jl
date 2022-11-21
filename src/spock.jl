@@ -10,6 +10,7 @@ module spock
   include("dynamics.jl")
   include("scenario_tree.jl")
   include("risk_measures.jl")
+  include("constraints.jl")
   include("model.jl")
 
   ## The supported algorithms

@@ -297,17 +297,18 @@ end
 function update_sy!(
   model :: MODEL_SP
 )
-  nz = model.solver_state.nz
-  nv = model.solver_state.nv
+  # TODO: Only for Broyden
+  # nz = model.solver_state.nz
+  # nv = model.solver_state.nv
 
-  for i = 1:nz
-    model.solver_state_internal.sz[i] = model.solver_state_internal.w[i] - model.solver_state.z_old[i]
-    model.solver_state_internal.yz[i] = model.solver_state_internal.rw[i] - model.solver_state_internal.rz_old[i]
-  end
-  for i = 1:nv
-    model.solver_state_internal.sv[i] = model.solver_state_internal.u[i] - model.solver_state.v_old[i]
-    model.solver_state_internal.yv[i] = model.solver_state_internal.ru[i] - model.solver_state_internal.rv_old[i]
-  end
+  # for i = 1:nz
+  #   model.solver_state_internal.sz[i] = model.solver_state_internal.w[i] - model.solver_state.z_old[i]
+  #   model.solver_state_internal.yz[i] = model.solver_state_internal.rw[i] - model.solver_state_internal.rz_old[i]
+  # end
+  # for i = 1:nv
+  #   model.solver_state_internal.sv[i] = model.solver_state_internal.u[i] - model.solver_state.v_old[i]
+  #   model.solver_state_internal.yv[i] = model.solver_state_internal.ru[i] - model.solver_state_internal.rv_old[i]
+  # end
 
   # Update the z / v / rz / rv -old variables for next iteration
   copyto!(model.solver_state.z_old, model.solver_state.z)
@@ -361,10 +362,11 @@ function should_terminate!(
   res = false
 
   if verbose === LOG
-    copyto!(model.solver_state.xi, model.solver_state.xi_1)
-    spock_mul!(model, model.solver_state.xi, true, model.solver_state.xi_2, 1., 1.)
+    # copyto!(model.solver_state.xi, model.solver_state.xi_1)
+    # spock_mul!(model, model.solver_state.xi, true, model.solver_state.xi_2, 1., 1.)
 
-    xi = LA.norm(model.solver_state.xi, Inf)
+    # xi = LA.norm(model.solver_state.xi, Inf)
+    xi = max(xi_1, xi_2)
 
     open("examples/output/xi_sp.dat", "a") do io
       writedlm(io, xi)

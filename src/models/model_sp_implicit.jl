@@ -3,6 +3,7 @@ function build_model_sp_implicitl(
   cost :: CostV2, 
   dynamics :: Dynamics, 
   rms :: Vector{RiskMeasureV2},
+  constraints :: ConvexConstraints
 )
 
   ### Problem definition
@@ -21,6 +22,7 @@ function build_model_sp_implicitl(
     rms,
     cost,
     dynamics,
+    constraints
   )
 
   ### Solver state
@@ -30,15 +32,15 @@ function build_model_sp_implicitl(
   z = zeros(nz); zbar = zeros(nz)
 
   # L
-  nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_11, nv_12, nv_13 = get_nv(problem_definition)
-  nv = sum([nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_11, nv_12, nv_13])
+  nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_7, nv_11, nv_12, nv_13, nv_14 = get_nv(problem_definition)
+  nv = sum([nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_7, nv_11, nv_12, nv_13, nv_14])
 
   v5_inds = collect(sum([nv_1, nv_2, nv_3, nv_4]) + 1 : sum([nv_1, nv_2, nv_3, nv_4, nv_5]))
   v6_inds = collect(sum([nv_1, nv_2, nv_3, nv_4, nv_5]) + 1 : sum([nv_1, nv_2, nv_3, nv_4, nv_5, nv_6]))
-  v12_inds = collect((sum([nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_11]) + 1 :
-    sum([nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_11, nv_12])))
-  v13_inds = collect((sum([nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_11, nv_12]) + 1 :
-    sum([nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_11, nv_12, nv_13])))
+  v12_inds = collect((sum([nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_7, nv_11]) + 1 :
+    sum([nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_7, nv_11, nv_12])))
+  v13_inds = collect((sum([nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_7, nv_11, nv_12]) + 1 :
+    sum([nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_7, nv_11, nv_12, nv_13])))
 
 
   # Offsets
@@ -51,9 +53,11 @@ function build_model_sp_implicitl(
   v4_offset = v3_offset + nx * (n - 1)
   v5_offset = v4_offset + nu * (n - 1)
   v6_offset = v5_offset + (n - 1)
-  v11_offset = v6_offset + (n - 1)
+  v7_offset = v6_offset + (n - 1)
+  v11_offset = v7_offset + constraints.nΓ_nonleaf
   v12_offset = v11_offset + n_leafs * nx
   v13_offset = v12_offset + n_leafs
+  v14_offset = v13_offset + n_leafs
 
   # Todo: L norm must be computed efficiently!
   L_norm = 3.28
@@ -99,8 +103,8 @@ function build_model_sp_implicitl(
     [-Inf, -Inf]
   )
 
-  MAX_BROYDEN_K = 20
-  ANDERSON_BUFFER_SIZE = 10
+  MAX_BROYDEN_K = 1 # todo
+  ANDERSON_BUFFER_SIZE = 3
 
   # TODO: Support more general cases
   ny = length(problem_definition.rms[1].b)
@@ -120,7 +124,7 @@ function build_model_sp_implicitl(
     map(x -> sqrt(x), cost.QN),
     zeros(nz),
     zeros(nv),
-    Ms,
+    # Ms,
     map(
       x -> LA.svd(LA.nullspace(x)).U * LA.pinv(LA.svd(LA.nullspace(x)).U),
       Ms
@@ -144,9 +148,11 @@ function build_model_sp_implicitl(
     v4_offset,
     v5_offset,
     v6_offset,
+    v7_offset,
     v11_offset,
     v12_offset,
     v13_offset,
+    v14_offset,
     zeros(nx + 2),
     zeros(nx + nu + 2),
     # SuperMann
@@ -163,24 +169,24 @@ function build_model_sp_implicitl(
     zeros(nz),
     zeros(nz),
     zeros(nv),
-    zeros(nz),
-    zeros(nv),
-    zeros(nz),
-    zeros(nv),
-    zeros(nz),
-    zeros(nv),
-    zeros(nz),
-    zeros(nv),
-    zeros(nz * MAX_BROYDEN_K),
-    zeros(nv * MAX_BROYDEN_K),
-    zeros(nz * MAX_BROYDEN_K),
-    zeros(nv * MAX_BROYDEN_K),
-    zeros(nz * MAX_BROYDEN_K),
-    zeros(nv * MAX_BROYDEN_K),
+    # zeros(nz),
+    # zeros(nv),
+    # zeros(nz),
+    # zeros(nv),
+    # zeros(nz),
+    # zeros(nv),
+    # zeros(nz),
+    # zeros(nv),
+    # zeros(nz * MAX_BROYDEN_K),
+    # zeros(nv * MAX_BROYDEN_K),
+    # zeros(nz * MAX_BROYDEN_K),
+    # zeros(nv * MAX_BROYDEN_K),
+    # zeros(nz * MAX_BROYDEN_K),
+    # zeros(nv * MAX_BROYDEN_K),
     ones(nz),
     ones(nv),
-    ones(nz),
-    ones(nv),
+    # ones(nz),
+    # ones(nv),
     # Anderson
     zeros(nz + nv, ANDERSON_BUFFER_SIZE),
     zeros(nz + nv, ANDERSON_BUFFER_SIZE),
@@ -188,6 +194,10 @@ function build_model_sp_implicitl(
     zeros(nv),
     zeros(nz),
     zeros(nv),
+    zeros(nz + nv),
+    zeros(nz + nv, ANDERSON_BUFFER_SIZE),
+    LA.UpperTriangular(LA.Matrix(LA.I(ANDERSON_BUFFER_SIZE) * 1.)),
+    zeros(ANDERSON_BUFFER_SIZE),
   )
 
   return MODEL_SP_IMPLICITL(
@@ -207,8 +217,8 @@ function generate_qnewton_direction!(
 
   # println("TODO: Function not implemented for this model.")
   # return restarted_broyden!(model, k, alpha1, alpha2)
-  
-  anderson!(model)
+  k += 1
+  anderson!(model, k)
   return k 
 end
 

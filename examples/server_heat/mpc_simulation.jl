@@ -20,7 +20,7 @@ N = 10; d = 2
 # Dimensions of state and input vectors
 nx = 20; nu = nx
 
-scen_tree, cost, dynamics, rms = get_server_heat_specs(N, nx, d)
+scen_tree, cost, dynamics, rms, constraints = get_server_heat_specs(N, nx, d)
 
 ##########################################
 ###  MPC simulation
@@ -37,7 +37,7 @@ cosmo_timings = zeros(MPC_N, M)
 
 for m = 1:M
 
-model = spock.build_model(scen_tree, cost, dynamics, rms, spock.SolverOptions(spock.L_IMPLICIT, spock.SP))
+model = spock.build_model(scen_tree, cost, dynamics, rms, constraints, spock.SolverOptions(spock.L_IMPLICIT, spock.SP))
 x0 = [i <= 2 ? .1 : .1 for i = 1:nx]
 x0_mosek = copy(x0)
 x0_gurobi = copy(x0)
@@ -53,7 +53,7 @@ for t = 1:MPC_N
   tau = model.solver_state.z[model.solver_state_internal.tau_inds]
   y = model.solver_state.z[model.solver_state_internal.y_inds]
 
-  model_mosek = spock.build_model_mosek(scen_tree, cost, dynamics, rms)
+  model_mosek = spock.build_model_mosek(scen_tree, cost, dynamics, rms, constraints)
   # if t > 1
   #   for i in eachindex(x_mosek)
   #     set_start_value(model_mosek[:x][i], x_mosek[i])
@@ -81,7 +81,7 @@ for t = 1:MPC_N
   global tau_mosek = value.(model_mosek[:tau])
   global y_mosek = value.(model_mosek[:y])
 
-  model_gurobi = spock.build_model_gurobi(scen_tree, cost, dynamics, rms)
+  # model_gurobi = spock.build_model_gurobi(scen_tree, cost, dynamics, rms, constraints)
   # if t > 1
   #   for i in eachindex(x_gurobi)
   #     set_start_value(model_gurobi[:x][i], x_gurobi[i])
@@ -99,16 +99,16 @@ for t = 1:MPC_N
   #     set_start_value(model_gurobi[:y][i], y_gurobi[i])
   #   end
   # end
-  set_optimizer_attribute(model_gurobi, "FeasibilityTol", TOL)
-  set_optimizer_attribute(model_gurobi, "OptimalityTol", TOL)
-  gurobi_timings[t, m] += @elapsed spock.solve_model(model_gurobi, x0_gurobi)
-  global x_gurobi = value.(model_gurobi[:x])
-  global u_gurobi = value.(model_gurobi[:u])
-  global s_gurobi = value.(model_gurobi[:s])
-  global tau_gurobi = value.(model_gurobi[:tau])
-  global y_gurobi = value.(model_gurobi[:y])
+  # set_optimizer_attribute(model_gurobi, "FeasibilityTol", TOL)
+  # set_optimizer_attribute(model_gurobi, "OptimalityTol", TOL)
+  # gurobi_timings[t, m] += @elapsed spock.solve_model(model_gurobi, x0_gurobi)
+  # global x_gurobi = value.(model_gurobi[:x])
+  # global u_gurobi = value.(model_gurobi[:u])
+  # global s_gurobi = value.(model_gurobi[:s])
+  # global tau_gurobi = value.(model_gurobi[:tau])
+  # global y_gurobi = value.(model_gurobi[:y])
 
-  model_ipopt = spock.build_model_ipopt(scen_tree, cost, dynamics, rms)
+  model_ipopt = spock.build_model_ipopt(scen_tree, cost, dynamics, rms, constraints)
   # if t > 1
   #   for i in eachindex(x_ipopt)
   #     set_start_value(model_ipopt[:x][i], x_ipopt[i])
@@ -134,7 +134,7 @@ for t = 1:MPC_N
   global tau_ipopt = value.(model_ipopt[:tau])
   global y_ipopt = value.(model_ipopt[:y])
 
-  model_cosmo = spock.build_model_cosmo(scen_tree, cost, dynamics, rms)
+  model_cosmo = spock.build_model_cosmo(scen_tree, cost, dynamics, rms, constraints)
   if t > 1
     for i in eachindex(x_cosmo)
       set_start_value(model_cosmo[:x][i], x_cosmo[i])
@@ -163,20 +163,20 @@ for t = 1:MPC_N
 
   u = model.solver_state.z[model.solver_state_internal.u_inds[1:nu]]
   u_mosek = value.(model_mosek[:u][1:nu])
-  u_gurobi = value.(model_gurobi[:u][1:nu])
+  # u_gurobi = value.(model_gurobi[:u][1:nu])
   u_ipopt = value.(model_ipopt[:u][1:nu])
   u_cosmo = value.(model_cosmo[:u][1:nu])
 
   w = rand(1:d)
   x0 = dynamics.A[w] * x0 + dynamics.B[w] * u
   x0_mosek = dynamics.A[w] * x0_mosek + dynamics.B[w] * u_mosek
-  x0_gurobi = dynamics.A[w] * x0_gurobi + dynamics.B[w] * u_gurobi
+  # x0_gurobi = dynamics.A[w] * x0_gurobi + dynamics.B[w] * u_gurobi
   x0_ipopt = dynamics.A[w] * x0_ipopt + dynamics.B[w] * u_ipopt
   x0_cosmo = dynamics.A[w] * x0_cosmo + dynamics.B[w] * u_cosmo
 
   x0 = reshape(x0, nx)
   x0_mosek = reshape(x0_mosek, nx)
-  x0_gurobi = reshape(x0_gurobi, nx)
+  # x0_gurobi = reshape(x0_gurobi, nx)
   x0_ipopt = reshape(x0_ipopt, nx)
   x0_cosmo = reshape(x0_cosmo, nx)
 end
@@ -207,7 +207,7 @@ fig = plot(
 
 plot!(1:MPC_N, model_timings_mean, color=:red, labels=["SPOCK"])
 plot!(1:MPC_N, mosek_timings_mean, color=:blue, labels=["MOSEK"])
-plot!(1:MPC_N, gurobi_timings_mean, color=:green, labels=["GUROBI"])
+# plot!(1:MPC_N, gurobi_timings_mean, color=:green, labels=["GUROBI"])
 plot!(1:MPC_N, ipopt_timings_mean, color=:purple, labels=["IPOPT"])
 plot!(1:MPC_N, cosmo_timings_mean, color=:black, labels=["COSMO"])
 
@@ -223,7 +223,7 @@ fig = plot(
 
 plot!(1:MPC_N, model_timings_mean, color=:red, labels=["SPOCK"], ribbon=model_timings_std, fillalpha=0.1)
 plot!(1:MPC_N, mosek_timings_mean, color=:blue, labels=["MOSEK"], ribbon=mosek_timings_std, fillalpha=0.1)
-plot!(1:MPC_N, gurobi_timings_mean, color=:green, labels=["GUROBI"], ribbon=gurobi_timings_std, fillalpha=0.1)
+# plot!(1:MPC_N, gurobi_timings_mean, color=:green, labels=["GUROBI"], ribbon=gurobi_timings_std, fillalpha=0.1)
 plot!(1:MPC_N, ipopt_timings_mean, color=:purple, labels=["IPOPT"], ribbon=ipopt_timings_std, fillalpha=0.1)
 plot!(1:MPC_N, cosmo_timings_mean, color=:black, labels=["COSMO"], ribbon=cosmo_timings_std, fillalpha=0.1)
 

@@ -61,6 +61,7 @@ struct GENERIC_PROBLEM_DEFINITIONV2{TF <: Real, TI <: Integer} <: PROBLEM_DEFINI
   rms :: Vector{RiskMeasureV2}
   cost:: Cost
   dynamics :: Dynamics{TF}
+  constraints :: UniformRectangle{TF, TI}
 end
 
 """
@@ -175,15 +176,15 @@ struct CP_IMPLICITL_STATE_INTERNAL{TI, TF, TM} <: SOLVER_STATE_INTERNAL
   sqrtQN :: Vector{TM}
   spock_mul_buffer_z :: Vector{TF}
   spock_mul_buffer_v :: Vector{TF}
-  M :: Vector{TM} # TODO: Unnecessary?
-  ls_matrix :: Vector{TM}
+  # M :: Vector{TM} # TODO: Unnecessary?
+  ls_matrix :: Vector{Matrix{TF}}
   ls_b :: Vector{TF}
   ls_b2 :: Vector{TF}
   # Ricatti
-  P :: Vector{TM}
-  K :: Vector{TM}
-  R_chol :: Vector{LA.Cholesky{TF, TM}}
-  ABK :: Vector{TM}
+  P :: Vector{Matrix{TF}}
+  K :: Vector{Matrix{TF}}
+  R_chol :: Vector{LA.Cholesky{TF, Matrix{TF}}}
+  ABK :: Vector{Matrix{TF}}
   ric_q :: Vector{TF}
   ric_d :: Vector{TF}
   sum_for_d :: Vector{TF}
@@ -199,9 +200,11 @@ struct CP_IMPLICITL_STATE_INTERNAL{TI, TF, TM} <: SOLVER_STATE_INTERNAL
   v4_offset :: TI
   v5_offset :: TI
   v6_offset :: TI
+  v7_offset :: Union{TI, Nothing}
   v11_offset :: TI
   v12_offset :: TI
   v13_offset :: TI
+  v14_offset :: Union{TI, Nothing}
   proj_leafs_workspace :: Vector{TF}
   proj_nleafs_workspace :: Vector{TF}
 end
@@ -230,15 +233,15 @@ struct SP_IMPLICITL_STATE_INTERNAL{TI, TF, TM} <: SOLVER_STATE_INTERNAL
   sqrtQN :: Vector{TM}
   spock_mul_buffer_z :: Vector{TF}
   spock_mul_buffer_v :: Vector{TF}
-  M :: Vector{TM} # TODO: Unnecessary?
-  ls_matrix :: Vector{TM}
+  # M :: Vector{TM} # TODO: Unnecessary?
+  ls_matrix :: Vector{Matrix{TF}}
   ls_b :: Vector{TF}
   ls_b2 :: Vector{TF}
   # Ricatti
-  P :: Vector{TM}
-  K :: Vector{TM}
-  R_chol :: Vector{LA.Cholesky{TF, TM}}
-  ABK :: Vector{TM}
+  P :: Vector{Matrix{TF}}
+  K :: Vector{Matrix{TF}}
+  R_chol :: Vector{LA.Cholesky{TF, Matrix{TF}}}
+  ABK :: Vector{Matrix{TF}}
   ric_q :: Vector{TF}
   ric_d :: Vector{TF}
   sum_for_d :: Vector{TF}
@@ -254,9 +257,11 @@ struct SP_IMPLICITL_STATE_INTERNAL{TI, TF, TM} <: SOLVER_STATE_INTERNAL
   v4_offset :: TI
   v5_offset :: TI
   v6_offset :: TI
+  v7_offset :: Union{TI, Nothing}
   v11_offset :: TI
   v12_offset :: TI
   v13_offset :: TI
+  v14_offset :: Union{TI, Nothing}
   proj_leafs_workspace :: Vector{TF}
   proj_nleafs_workspace :: Vector{TF}  
   # For SuperMann
@@ -274,24 +279,24 @@ struct SP_IMPLICITL_STATE_INTERNAL{TI, TF, TM} <: SOLVER_STATE_INTERNAL
   workspace_Lz :: Vector{TF}
   workspace_Lv :: Vector{TF}
   # Restarted Broyden
-  sz :: Vector{TF}
-  sv :: Vector{TF}
-  stildez :: Vector{TF}
-  stildev :: Vector{TF}
-  yz :: Vector{TF}
-  yv :: Vector{TF}
-  Psz :: Vector{TF}
-  Psv :: Vector{TF}
-  Sz_buf :: Vector{TF}
-  Sv_buf :: Vector{TF}
-  Stildez_buf :: Vector{TF}
-  Stildev_buf :: Vector{TF}
-  Psz_buf :: Vector{TF}
-  Psv_buf :: Vector{TF}
+  # sz :: Vector{TF}
+  # sv :: Vector{TF}
+  # stildez :: Vector{TF}
+  # stildev :: Vector{TF}
+  # yz :: Vector{TF}
+  # yv :: Vector{TF}
+  # Psz :: Vector{TF}
+  # Psv :: Vector{TF}
+  # Sz_buf :: Vector{TF}
+  # Sv_buf :: Vector{TF}
+  # Stildez_buf :: Vector{TF}
+  # Stildev_buf :: Vector{TF}
+  # Psz_buf :: Vector{TF}
+  # Psv_buf :: Vector{TF}
   rz_old :: Vector{TF}
   rv_old :: Vector{TF}
-  broyden_workspace_z :: Vector{TF}
-  broyden_workspace_v :: Vector{TF}
+  # broyden_workspace_z :: Vector{TF}
+  # broyden_workspace_v :: Vector{TF}
   # Anderson
   MP :: Matrix{TF}
   MR :: Matrix{TF}
@@ -299,6 +304,10 @@ struct SP_IMPLICITL_STATE_INTERNAL{TI, TF, TM} <: SOLVER_STATE_INTERNAL
   delta_v_old :: Vector{TF}
   delta_rz_old :: Vector{TF}
   delta_rv_old :: Vector{TF}
+  aa_wsp :: Vector{TF}
+  aa_Q :: Matrix{TF}
+  aa_R :: LA.UpperTriangular{TF, Matrix{TF}}
+  aa_gamma :: Vector{TF}
 end
 
 struct MODEL_SP_IMPLICITL{TI, TF, TM} <: CUSTOM_SOLVER_MODEL
@@ -340,6 +349,7 @@ function build_model(
   cost :: Cost, 
   dynamics :: Dynamics, 
   rms :: Union{Vector{RiskMeasureV1}, Vector{RiskMeasureV2}},
+  constraints :: ConvexConstraints,
   solver_options :: SolverOptions = SolverOptions(DYNAMICSL, CP)
 )
 """
@@ -358,9 +368,9 @@ if solver_options.dynamics == DYNAMICSL
   end
 elseif solver_options.dynamics == L_IMPLICIT
   if solver_options.algorithm == CP
-    return build_model_cp_implicitl(scen_tree, cost, dynamics, rms)
+    return build_model_cp_implicitl(scen_tree, cost, dynamics, rms, constraints)
   elseif solver_options.algorithm == SP
-    return build_model_sp_implicitl(scen_tree, cost, dynamics, rms)
+    return build_model_sp_implicitl(scen_tree, cost, dynamics, rms, constraints)
   end
 end
 
