@@ -1,8 +1,8 @@
 function build_model_cp_implicitl(
-  scen_tree :: ScenarioTreeV2, 
-  cost :: CostV2, 
+  scen_tree :: ScenarioTree, 
+  cost :: Cost, 
   dynamics :: Dynamics, 
-  rms :: Vector{RiskMeasureV2},
+  rms :: Vector{RiskMeasure},
   constraints :: AbstractConvexConstraints
 )
 
@@ -14,7 +14,7 @@ function build_model_cp_implicitl(
   # x0
   x0 = zeros(nx)
 
-  problem_definition = GENERIC_PROBLEM_DEFINITIONV2(
+  problem_definition = GENERIC_PROBLEM_DEFINITION(
     x0,
     nx,
     nu,

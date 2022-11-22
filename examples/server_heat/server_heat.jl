@@ -21,7 +21,7 @@ nx === nu
   scen_tree = spock.generate_scenario_tree_uniform_branching_factor_v2(N, d, nx, nx)
 
   # Cost definition (Quadratic, positive definite)
-  cost = spock.CostV2(
+  cost = spock.Cost(
     # Q matrices
     collect([
       LA.I(nx) * 1e-1 for i in 1:scen_tree.n - 1
@@ -36,7 +36,7 @@ nx === nu
     ])
   )
 
-  # cost = spock.CostV2(
+  # cost = spock.Cost(
   #   # Q matrices
   #   collect([
   #     Matrix(LA.diagm(rand(nx)) * 1e-0) for i in 1:scen_tree.n - 1
@@ -61,7 +61,7 @@ nx === nu
   #   rand(nx, nx) for i in 1:scen_tree.n_leaf_nodes
   # ])
 
-  # cost = spock.CostV2(
+  # cost = spock.Cost(
   #   # Q matrices
   #   map(x -> x' * x / LA.opnorm(x' * x), Qs),
   #   # R matrices
@@ -132,7 +132,7 @@ nx === nu
   scen_tree = spock.generate_scenario_tree_uniform_branching_factor_v2(N, d, nx, nx)
 
   # Cost definition (Quadratic, positive definite)
-  cost = spock.CostV2(
+  cost = spock.Cost(
     # Q matrices
     collect([
       Matrix(LA.I(nx) * 1e-1) for i in 1:scen_tree.n - 1
@@ -147,7 +147,7 @@ nx === nu
     ])
   )
 
-  # cost = spock.CostV2(
+  # cost = spock.Cost(
   #   # Q matrices
   #   collect([
   #     Matrix(LA.diagm(rand(nx)) * 1e-0) for i in 1:scen_tree.n - 1
@@ -172,7 +172,7 @@ nx === nu
   #   rand(nx, nx) for i in 1:scen_tree.n_leaf_nodes
   # ])
 
-  # cost = spock.CostV2(
+  # cost = spock.Cost(
   #   # Q matrices
   #   map(x -> x' * x / LA.opnorm(x' * x), Qs),
   #   # R matrices

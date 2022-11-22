@@ -18,7 +18,7 @@ abstract type SOLVER_STATE end
 # used to store some specific variables for this model
 abstract type SOLVER_STATE_INTERNAL end
 # Part of the problem definition that remains accessible during the solve step
-abstract type PROBLEM_DEFINITION end
+abstract type ABSTRACT_PROBLEM_DEFINITION end
 
 struct GENERIC_SOLVER_STATE{TF, TI} <: SOLVER_STATE
   nz :: TI
@@ -43,12 +43,12 @@ struct GENERIC_SOLVER_STATE{TF, TI} <: SOLVER_STATE
   res_0 :: Vector{TF}
 end
 
-struct GENERIC_PROBLEM_DEFINITIONV2{TF <: Real, TI <: Integer} <: PROBLEM_DEFINITION
+struct GENERIC_PROBLEM_DEFINITION{TF <: Real, TI <: Integer} <: ABSTRACT_PROBLEM_DEFINITION
   x0 :: Vector{TF}
   nx :: TI
   nu :: TI
-  scen_tree :: ScenarioTreeV2{TI}
-  rms :: Vector{RiskMeasureV2}
+  scen_tree :: ScenarioTree{TI}
+  rms :: Vector{RiskMeasure}
   cost:: Cost
   dynamics :: Dynamics{TF}
   constraints :: UniformRectangle{TF, TI}
@@ -127,7 +127,7 @@ end
 struct MODEL_CP_IMPLICITL{TI, TF, TM} <: CUSTOM_SOLVER_MODEL
   solver_state :: GENERIC_SOLVER_STATE{TF, TI}
   solver_state_internal :: CP_IMPLICITL_STATE_INTERNAL{TI, TF, TM}
-  problem_definition :: GENERIC_PROBLEM_DEFINITIONV2{TF, TI}
+  problem_definition :: GENERIC_PROBLEM_DEFINITION{TF, TI}
 end
 
 ########
@@ -228,7 +228,7 @@ end
 struct MODEL_SP_IMPLICITL{TI, TF, TM} <: CUSTOM_SOLVER_MODEL
   solver_state :: GENERIC_SOLVER_STATE{TF, TI}
   solver_state_internal :: SP_IMPLICITL_STATE_INTERNAL{TI, TF, TM}
-  problem_definition :: GENERIC_PROBLEM_DEFINITIONV2{TF, TI}
+  problem_definition :: GENERIC_PROBLEM_DEFINITION{TF, TI}
 end
 
 """
@@ -257,10 +257,10 @@ const MODEL_SP = Union{MODEL_SP_IMPLICITL}
 #####################################################
 
 function build_model(
-  scen_tree :: ScenarioTree, 
-  cost :: Cost, 
+  scen_tree :: AbstractScenarioTree, 
+  cost :: AbstractCost, 
   dynamics :: Dynamics, 
-  rms :: Union{Vector{RiskMeasure}, Vector{RiskMeasureV2}},
+  rms :: Union{Vector{AbstractRiskMeasure}, Vector{RiskMeasure}},
   constraints :: AbstractConvexConstraints,
   solver_options :: SolverOptions = SolverOptions(CP, nothing)
 )

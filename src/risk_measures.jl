@@ -74,9 +74,9 @@ struct ConvexCone
   subcones:: Vector{ConvexBaseCone}
 end
 
-abstract type RiskMeasure end 
+abstract type AbstractRiskMeasure end 
 
-struct RiskMeasureV2 <: RiskMeasure
+struct RiskMeasure <: AbstractRiskMeasure
   E:: Matrix{Float64}
   F:: Matrix{Float64}
   b:: Vector{Float64}
@@ -92,7 +92,7 @@ Return a RiskMeasure object with a uniform risk mapping over all nodes
 """
 function get_uniform_rms_v2(E, F, b, K, d, N)
   return [
-        RiskMeasureV2(
+        RiskMeasure(
             E,
             F,
             b,
@@ -126,7 +126,7 @@ end
 
 function get_nonuniform_rms_avar_v2(d, N)
   return [
-    RiskMeasureV2(
+    RiskMeasure(
         [rand() * LA.I(d); - LA.I(d); [1. for _ in 1:d]'],
         zeros(2*d+1, d),
         [rand_probvec2(d); [0. for _ in 1:d]; 1.],

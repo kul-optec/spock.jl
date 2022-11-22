@@ -8,7 +8,7 @@ nx = 2; nu = 1
 scen_tree = generate_scenario_tree_uniform_branching_factor_v2(N, d, nx, nu)
 
 # Cost definition (Quadratic, positive definite)
-cost = CostV2(
+cost = Cost(
   # Q matrices
   collect([
     LA.Matrix([(2.2) 0; 0 (3.7)]) for i in 1:scen_tree.n - 1

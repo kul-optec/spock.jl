@@ -14,7 +14,7 @@ nx = 2; nu = 1
 scen_tree = spock.generate_scenario_tree_uniform_branching_factor_v2(N, d, nx, nu)
 
 # Cost definition (Quadratic, positive definite)
-cost = spock.CostV2(
+cost = spock.Cost(
   # Q matrices
   collect([
     LA.Matrix([(2.2) 0; 0 (3.7)]) / 3.7 for i in 1:scen_tree.n - 1
@@ -40,7 +40,7 @@ cost = spock.CostV2(
   #   rand(nx, nx) for i in 1:scen_tree.n_leaf_nodes
   # ])
 
-  # cost = spock.CostV2(
+  # cost = spock.Cost(
   #   # Q matrices
   #   map(x -> x' * x, Qs),
   #   # R matrices

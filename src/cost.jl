@@ -1,6 +1,6 @@
-abstract type Cost end
+abstract type AbstractCost end
 
-struct CostV2{TM} <: Cost
+struct Cost{TM} <: AbstractCost
   Q :: Vector{TM}
   R :: Vector{TM}
   QN :: Vector{TM}

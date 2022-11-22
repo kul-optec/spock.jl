@@ -2,7 +2,7 @@
 # Build step
 ############################################################
 
-function get_nz(problem_definition :: GENERIC_PROBLEM_DEFINITIONV2)
+function get_nz(problem_definition :: GENERIC_PROBLEM_DEFINITION)
   nx_total = problem_definition.scen_tree.n * problem_definition.nx   # Every node has a state
 
   return (problem_definition.scen_tree.n_non_leaf_nodes * problem_definition.nu # One input per non leaf node
@@ -14,7 +14,7 @@ function get_nz(problem_definition :: GENERIC_PROBLEM_DEFINITIONV2)
   # todo: to support non uniform risk measures, replace the `length(rms[1].b)` by a summation of the lengths of all the risk measures' b vector.
 end
 
-function get_nv(problem_definition :: GENERIC_PROBLEM_DEFINITIONV2)
+function get_nv(problem_definition :: GENERIC_PROBLEM_DEFINITION)
 
   # todo: to support non uniform risk measures, replace the `length(rms[1].b)` by a summation of the lengths of all the risk measures' b vector.
   ny = length(problem_definition.rms[1].b)
@@ -44,7 +44,7 @@ function get_nv(problem_definition :: GENERIC_PROBLEM_DEFINITIONV2)
 end
 
 function ricatti_offline(
-  problem_definition :: GENERIC_PROBLEM_DEFINITIONV2
+  problem_definition :: GENERIC_PROBLEM_DEFINITION
 )
 
   P = [
@@ -103,13 +103,13 @@ end
 """
 Get the indices of the x variable's components.
 """
-function z_to_x(problem_definition :: GENERIC_PROBLEM_DEFINITIONV2)
+function z_to_x(problem_definition :: GENERIC_PROBLEM_DEFINITION)
     return collect(
         1 : problem_definition.nx * problem_definition.scen_tree.n
     )
 end    
 
-function z_to_u(problem_definition :: GENERIC_PROBLEM_DEFINITIONV2)
+function z_to_u(problem_definition :: GENERIC_PROBLEM_DEFINITION)
     return collect(
         problem_definition.nx * problem_definition.scen_tree.n + 1 : 
         problem_definition.nx * problem_definition.scen_tree.n + 
@@ -117,7 +117,7 @@ function z_to_u(problem_definition :: GENERIC_PROBLEM_DEFINITIONV2)
     )
 end
 
-function z_to_s(problem_definition :: GENERIC_PROBLEM_DEFINITIONV2)
+function z_to_s(problem_definition :: GENERIC_PROBLEM_DEFINITION)
     return collect(
       problem_definition.nx * problem_definition.scen_tree.n + 
         (problem_definition.scen_tree.n_non_leaf_nodes) * problem_definition.nu + 1 :
@@ -127,7 +127,7 @@ function z_to_s(problem_definition :: GENERIC_PROBLEM_DEFINITIONV2)
     )
 end
 
-function z_to_tau(problem_definition :: GENERIC_PROBLEM_DEFINITIONV2)
+function z_to_tau(problem_definition :: GENERIC_PROBLEM_DEFINITION)
 
   return collect(
     problem_definition.nx * problem_definition.scen_tree.n + 
@@ -139,7 +139,7 @@ function z_to_tau(problem_definition :: GENERIC_PROBLEM_DEFINITIONV2)
   )
 end
 
-function z_to_y(problem_definition :: GENERIC_PROBLEM_DEFINITIONV2)
+function z_to_y(problem_definition :: GENERIC_PROBLEM_DEFINITION)
   """
   TODO: replace n_y by a summation over all ny to support non uniform risk measures
   """
@@ -157,13 +157,13 @@ function z_to_y(problem_definition :: GENERIC_PROBLEM_DEFINITIONV2)
     )
 end
 
-function node_to_x(problem_definition :: GENERIC_PROBLEM_DEFINITIONV2, i :: Int64)
+function node_to_x(problem_definition :: GENERIC_PROBLEM_DEFINITION, i :: Int64)
   return collect(
       (i - 1) * problem_definition.nx + 1 : i * problem_definition.nx
   )
 end
 
-function node_to_u(problem_definition :: GENERIC_PROBLEM_DEFINITIONV2, i :: Int64)
+function node_to_u(problem_definition :: GENERIC_PROBLEM_DEFINITION, i :: Int64)
   return collect(
       (i - 1) * problem_definition.nu + 1 : i * problem_definition.nu
   )

@@ -1,4 +1,4 @@
-abstract type ScenarioTree end
+abstract type AbstractScenarioTree end
 
 ###
 # Scenario tree
@@ -22,7 +22,7 @@ The above variables are defined for:
     - s: non-leaf nodes for risk measures values, leaf nodes for cost values of corresponding scenario
 """
 
-struct ScenarioTreeNodeInfoV2{TI <: Integer}
+struct ScenarioTreeNodeInfo{TI <: Integer}
   x :: Union{Vector{TI}, Nothing}
   u :: Union{Vector{TI}, Nothing}
   w :: Union{TI, Nothing}
@@ -41,10 +41,10 @@ Struct that represents a scenario tree.
     - min_index_per_timestep: array containing, for each time step, the index of the first node
 """
 
-struct ScenarioTreeV2{TI <: Integer} <: ScenarioTree
+struct ScenarioTree{TI <: Integer} <: AbstractScenarioTree
   child_mapping :: Dict{TI, Vector{TI}}
   anc_mapping :: Dict{TI, TI}
-  node_info :: Vector{ScenarioTreeNodeInfoV2{TI}}
+  node_info :: Vector{ScenarioTreeNodeInfo{TI}}
   N :: TI
   n :: TI
   n_non_leaf_nodes :: TI
@@ -71,7 +71,7 @@ function generate_scenario_tree_uniform_branching_factor_v2(N :: TI, d :: TI, nx
   n_non_leafs = (d^(N - 1) - 1) ÷ (d - 1)
   
   node_info = [
-      ScenarioTreeNodeInfoV2(
+      ScenarioTreeNodeInfo(
           collect((i - 1) * nx + 1 : i * nx),
           i <= n_non_leafs ? collect((i - 1) * nu + 1 : i * nu) : nothing, # todo: write slightly more genereal for nu > 1 (similar to the line above)
           i > 1 ? (i % d) + 1 : nothing,
@@ -94,7 +94,7 @@ function generate_scenario_tree_uniform_branching_factor_v2(N :: TI, d :: TI, nx
       end
   end
 
-  return ScenarioTreeV2(
+  return ScenarioTree(
       child_mapping,
       anc_mapping,
       node_info,

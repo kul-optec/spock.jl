@@ -6,7 +6,7 @@ using MosekTools, Ipopt, Gurobi, SCS, SDPT3, SeDuMi, COSMO
 
 #### COST
 
-function impose_cost(model :: Model, problem_definition :: GENERIC_PROBLEM_DEFINITIONV2)
+function impose_cost(model :: Model, problem_definition :: GENERIC_PROBLEM_DEFINITION)
   anc_mapping = problem_definition.scen_tree.anc_mapping
   x = model[:x]
   u = model[:u]
@@ -28,7 +28,7 @@ end
 
 #### Dynamics
 
-function impose_dynamics(model :: Model, problem_definition :: GENERIC_PROBLEM_DEFINITIONV2)
+function impose_dynamics(model :: Model, problem_definition :: GENERIC_PROBLEM_DEFINITION)
   x = model[:x]
   u = model[:u]
 
@@ -45,7 +45,7 @@ end
 
 function impose_box_constraints(
   model :: Model,
-  problem_definition :: GENERIC_PROBLEM_DEFINITIONV2,
+  problem_definition :: GENERIC_PROBLEM_DEFINITION,
 )
   x = model[:x]
   u = model[:u]
@@ -82,7 +82,7 @@ end
 
 #### Risk constraints
 
-function add_risk_epi_constraints(model::Model, problem_definition :: GENERIC_PROBLEM_DEFINITIONV2)
+function add_risk_epi_constraints(model::Model, problem_definition :: GENERIC_PROBLEM_DEFINITION)
   ny = 0
   for i = 1:length(problem_definition.rms)
     ny += length(problem_definition.rms[i].b)
@@ -131,10 +131,10 @@ function add_risk_epi_constraints(model::Model, problem_definition :: GENERIC_PR
 end
 
 function build_model_mosek(
-  scen_tree :: ScenarioTreeV2, 
-  cost :: CostV2, 
+  scen_tree :: ScenarioTree, 
+  cost :: Cost, 
   dynamics :: Dynamics, 
-  rms :: Vector{RiskMeasureV2},
+  rms :: Vector{RiskMeasure},
   constraints :: UniformRectangle
 )
 
@@ -146,7 +146,7 @@ function build_model_mosek(
   # x0
   x0 = zeros(nx)
 
-  problem_definition = GENERIC_PROBLEM_DEFINITIONV2(
+  problem_definition = GENERIC_PROBLEM_DEFINITION(
     x0,
     nx,
     nu,
@@ -184,10 +184,10 @@ function build_model_mosek(
 end
 
 function build_model_gurobi(
-  scen_tree :: ScenarioTreeV2, 
-  cost :: CostV2, 
+  scen_tree :: ScenarioTree, 
+  cost :: Cost, 
   dynamics :: Dynamics, 
-  rms :: Vector{RiskMeasureV2},
+  rms :: Vector{RiskMeasure},
   constraints :: UniformRectangle
 )
 
@@ -199,7 +199,7 @@ function build_model_gurobi(
   # x0
   x0 = zeros(nx)
 
-  problem_definition = GENERIC_PROBLEM_DEFINITIONV2(
+  problem_definition = GENERIC_PROBLEM_DEFINITION(
     x0,
     nx,
     nu,
@@ -237,10 +237,10 @@ function build_model_gurobi(
 end
 
 function build_model_ipopt(
-  scen_tree :: ScenarioTreeV2, 
-  cost :: CostV2, 
+  scen_tree :: ScenarioTree, 
+  cost :: Cost, 
   dynamics :: Dynamics, 
-  rms :: Vector{RiskMeasureV2},
+  rms :: Vector{RiskMeasure},
   constraints :: UniformRectangle
 )
 
@@ -252,7 +252,7 @@ function build_model_ipopt(
   # x0
   x0 = zeros(nx)
 
-  problem_definition = GENERIC_PROBLEM_DEFINITIONV2(
+  problem_definition = GENERIC_PROBLEM_DEFINITION(
     x0,
     nx,
     nu,
@@ -290,10 +290,10 @@ function build_model_ipopt(
 end
 
 function build_model_scs(
-  scen_tree :: ScenarioTreeV2, 
-  cost :: CostV2, 
+  scen_tree :: ScenarioTree, 
+  cost :: Cost, 
   dynamics :: Dynamics, 
-  rms :: Vector{RiskMeasureV2},
+  rms :: Vector{RiskMeasure},
   constraints :: UniformRectangle
 )
 
@@ -305,7 +305,7 @@ function build_model_scs(
   # x0
   x0 = zeros(nx)
 
-  problem_definition = GENERIC_PROBLEM_DEFINITIONV2(
+  problem_definition = GENERIC_PROBLEM_DEFINITION(
     x0,
     nx,
     nu,
@@ -343,10 +343,10 @@ function build_model_scs(
 end
 
 function build_model_sdpt3(
-  scen_tree :: ScenarioTreeV2, 
-  cost :: CostV2, 
+  scen_tree :: ScenarioTree, 
+  cost :: Cost, 
   dynamics :: Dynamics, 
-  rms :: Vector{RiskMeasureV2},
+  rms :: Vector{RiskMeasure},
   constraints :: UniformRectangle
 )
 
@@ -358,7 +358,7 @@ function build_model_sdpt3(
   # x0
   x0 = zeros(nx)
 
-  problem_definition = GENERIC_PROBLEM_DEFINITIONV2(
+  problem_definition = GENERIC_PROBLEM_DEFINITION(
     x0,
     nx,
     nu,
@@ -396,10 +396,10 @@ function build_model_sdpt3(
 end
 
 function build_model_sedumi(
-  scen_tree :: ScenarioTreeV2, 
-  cost :: CostV2, 
+  scen_tree :: ScenarioTree, 
+  cost :: Cost, 
   dynamics :: Dynamics, 
-  rms :: Vector{RiskMeasureV2},
+  rms :: Vector{RiskMeasure},
   constraints :: UniformRectangle
 )
 
@@ -411,7 +411,7 @@ function build_model_sedumi(
   # x0
   x0 = zeros(nx)
 
-  problem_definition = GENERIC_PROBLEM_DEFINITIONV2(
+  problem_definition = GENERIC_PROBLEM_DEFINITION(
     x0,
     nx,
     nu,
@@ -449,10 +449,10 @@ function build_model_sedumi(
 end
 
 function build_model_cosmo(
-  scen_tree :: ScenarioTreeV2, 
-  cost :: CostV2, 
+  scen_tree :: ScenarioTree, 
+  cost :: Cost, 
   dynamics :: Dynamics, 
-  rms :: Vector{RiskMeasureV2},
+  rms :: Vector{RiskMeasure},
   constraints :: UniformRectangle
 )
 
@@ -464,7 +464,7 @@ function build_model_cosmo(
   # x0
   x0 = zeros(nx)
 
-  problem_definition = GENERIC_PROBLEM_DEFINITIONV2(
+  problem_definition = GENERIC_PROBLEM_DEFINITION(
     x0,
     nx,
     nu,
