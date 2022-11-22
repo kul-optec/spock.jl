@@ -73,7 +73,7 @@ function generate_scenario_tree_uniform_branching_factor_v2(N :: TI, d :: TI, nx
   node_info = [
       ScenarioTreeNodeInfo(
           collect((i - 1) * nx + 1 : i * nx),
-          i <= n_non_leafs ? collect((i - 1) * nu + 1 : i * nu) : nothing, # todo: write slightly more genereal for nu > 1 (similar to the line above)
+          i <= n_non_leafs ? collect((i - 1) * nu + 1 : i * nu) : nothing,
           i > 1 ? (i % d) + 1 : nothing,
           i,
           i > 1 ? i : nothing

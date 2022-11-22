@@ -30,7 +30,7 @@ module spock
   include("models/model_mosek.jl")
 
   # Precompile for the required arguments
-  precompile(solve_model!, (MODEL_CP_IMPLICITL, Vector{Float64}))
-  precompile(solve_model!, (MODEL_SP_IMPLICITL, Vector{Float64}))
+  precompile(solve_model!, (CPOCK, Vector{Float64}))
+  precompile(solve_model!, (SPOCK, Vector{Float64}))
 
 end

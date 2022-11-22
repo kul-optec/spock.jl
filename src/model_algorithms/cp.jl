@@ -183,7 +183,7 @@ end
 
 # end
 
-# precompile(should_terminate!, (MODEL_CP_IMPLICITL, Float64, Float64, Float64))
+# precompile(should_terminate!, (CPOCK, Float64, Float64, Float64))
 
 function run_cp!(
   model :: MODEL_CP;

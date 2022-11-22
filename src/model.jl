@@ -124,7 +124,7 @@ struct CP_IMPLICITL_STATE_INTERNAL{TI, TF, TM} <: SOLVER_STATE_INTERNAL
   proj_nleafs_workspace :: Vector{TF}
 end
 
-struct MODEL_CP_IMPLICITL{TI, TF, TM} <: CUSTOM_SOLVER_MODEL
+struct CPOCK{TI, TF, TM} <: CUSTOM_SOLVER_MODEL
   solver_state :: GENERIC_SOLVER_STATE{TF, TI}
   solver_state_internal :: CP_IMPLICITL_STATE_INTERNAL{TI, TF, TM}
   problem_definition :: GENERIC_PROBLEM_DEFINITION{TF, TI}
@@ -225,11 +225,25 @@ struct SP_IMPLICITL_STATE_INTERNAL{TI, TF, TM} <: SOLVER_STATE_INTERNAL
   aa_gamma :: Vector{TF}
 end
 
-struct MODEL_SP_IMPLICITL{TI, TF, TM} <: CUSTOM_SOLVER_MODEL
+struct SPOCK{TI, TF, TM} <: CUSTOM_SOLVER_MODEL
   solver_state :: GENERIC_SOLVER_STATE{TF, TI}
   solver_state_internal :: SP_IMPLICITL_STATE_INTERNAL{TI, TF, TM}
   problem_definition :: GENERIC_PROBLEM_DEFINITION{TF, TI}
 end
+
+"""
+Give models a structure:
+
+state :: GENERIC_SOLVER_STATE{TF, TI}
+mul_state ::
+S1_state
+S2_state
+S3_state
+prox_g*_state
+sp_state :: If applicable
+qn_state :: If applicable Broyden or AA
+problem :: GENERIC_PROBLEM_DEFINITION{TF, TI}
+"""
 
 """
 Verbose levels
@@ -244,13 +258,13 @@ end
 ##############
 
 # All models with L implicitly constructed
-const MODEL_IMPLICITL = Union{MODEL_CP_IMPLICITL, MODEL_SP_IMPLICITL}
+const MODEL_IMPLICITL = Union{CPOCK, SPOCK}
 
 # All models using the plain CP algorithm
-const MODEL_CP = Union{MODEL_CP_IMPLICITL}
+const MODEL_CP = Union{CPOCK}
 
 # All models using the CP + SuperMann algorithm
-const MODEL_SP = Union{MODEL_SP_IMPLICITL}
+const MODEL_SP = Union{SPOCK}
 
 #####################################################
 # Exposed API funcions

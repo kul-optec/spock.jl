@@ -201,7 +201,7 @@ function build_spock(
     zeros(ANDERSON_BUFFER_SIZE),
   )
 
-  return MODEL_SP_IMPLICITL(
+  return SPOCK(
     solver_state,
     solver_state_internal,
     problem_definition
@@ -210,7 +210,7 @@ function build_spock(
 end
 
 function generate_qnewton_direction!(
-  model :: MODEL_SP_IMPLICITL,
+  model :: SPOCK,
   k :: TI,
   alpha1 :: TF,
   alpha2 :: TF
@@ -229,7 +229,7 @@ end
 ################
 
 function solve_model!(
-  model :: MODEL_SP_IMPLICITL,
+  model :: SPOCK,
   x0 :: AbstractArray{TF, 1};
   tol :: TF = 1e-3,
   verbose :: VERBOSE_LEVEL = SILENT,

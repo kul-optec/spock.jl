@@ -154,7 +154,7 @@ function build_cpock(
     zeros(nx + nu + 2)
   )
 
-  return MODEL_CP_IMPLICITL(
+  return CPOCK(
     solver_state,
     solver_state_internal,
     problem_definition
@@ -167,7 +167,7 @@ end
 ################
 
 function solve_model!(
-  model :: MODEL_CP_IMPLICITL,
+  model :: CPOCK,
   x0 :: AbstractArray{TF, 1};
   tol :: TF = 1e-3,
   verbose :: VERBOSE_LEVEL = SILENT,

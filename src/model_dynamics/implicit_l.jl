@@ -480,7 +480,7 @@ C <- model.L' * B * α + C * β
   end
 end
 
-precompile(spock_mul!, (MODEL_CP_IMPLICITL, Vector{Float64}, Bool, Vector{Float64}, Float64, Float64))
+precompile(spock_mul!, (CPOCK, Vector{Float64}, Bool, Vector{Float64}, Float64, Float64))
 
 function spock_dot(
   model :: MODEL_IMPLICITL,
@@ -747,7 +747,7 @@ arg <- prox_f^gamma(arg)
   projection_S2!(model, view(arg, model.solver_state_internal.s_inds[1] + 1 : model.solver_state.nz), gamma)
 end
 
-precompile(prox_f!, (MODEL_CP_IMPLICITL, Vector{Float64}, Float64))
+precompile(prox_f!, (CPOCK, Vector{Float64}, Float64))
 
 function project_on_leaf_constraints!(
   model :: MODEL_IMPLICITL,
