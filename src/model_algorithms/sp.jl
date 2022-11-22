@@ -347,11 +347,11 @@ function update_delta_old!(
   model :: MODEL_SP
 )
 
-  copyto!(model.solver_state_internal.delta_z_old, model.state.delta_z)
-  copyto!(model.solver_state_internal.delta_v_old, model.state.delta_v)
+  copyto!(model.qn_state.delta_z_old, model.state.delta_z)
+  copyto!(model.qn_state.delta_v_old, model.state.delta_v)
 
-  copyto!(model.solver_state_internal.delta_rz_old, model.state.delta_rz)
-  copyto!(model.solver_state_internal.delta_rv_old, model.state.delta_rv)
+  copyto!(model.qn_state.delta_rz_old, model.state.delta_rz)
+  copyto!(model.qn_state.delta_rv_old, model.state.delta_rv)
 
 end
 

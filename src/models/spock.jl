@@ -111,6 +111,19 @@ function build_spock(
   ny = length(problem.rms[1].b)
   n_children = length(problem.dynamics.A)
 
+  aa_state = AA_STATE(
+    zeros(nz + nv, ANDERSON_BUFFER_SIZE),
+    zeros(nz + nv, ANDERSON_BUFFER_SIZE),
+    zeros(nz),
+    zeros(nv),
+    zeros(nz),
+    zeros(nv),
+    zeros(nz + nv),
+    zeros(nz + nv, ANDERSON_BUFFER_SIZE),
+    LA.UpperTriangular(LA.Matrix(LA.I(ANDERSON_BUFFER_SIZE) * 1.)),
+    zeros(ANDERSON_BUFFER_SIZE),
+  )
+
   solver_state_internal = SP_IMPLICITL_STATE_INTERNAL(
     zeros(nx),
     zeros(nx),
@@ -189,21 +202,22 @@ function build_spock(
     # ones(nz),
     # ones(nv),
     # Anderson
-    zeros(nz + nv, ANDERSON_BUFFER_SIZE),
-    zeros(nz + nv, ANDERSON_BUFFER_SIZE),
-    zeros(nz),
-    zeros(nv),
-    zeros(nz),
-    zeros(nv),
-    zeros(nz + nv),
-    zeros(nz + nv, ANDERSON_BUFFER_SIZE),
-    LA.UpperTriangular(LA.Matrix(LA.I(ANDERSON_BUFFER_SIZE) * 1.)),
-    zeros(ANDERSON_BUFFER_SIZE),
+    # zeros(nz + nv, ANDERSON_BUFFER_SIZE),
+    # zeros(nz + nv, ANDERSON_BUFFER_SIZE),
+    # zeros(nz),
+    # zeros(nv),
+    # zeros(nz),
+    # zeros(nv),
+    # zeros(nz + nv),
+    # zeros(nz + nv, ANDERSON_BUFFER_SIZE),
+    # LA.UpperTriangular(LA.Matrix(LA.I(ANDERSON_BUFFER_SIZE) * 1.)),
+    # zeros(ANDERSON_BUFFER_SIZE),
   )
 
   return SPOCK(
     solver_state,
     solver_state_internal,
+    aa_state,
     problem
   )
 

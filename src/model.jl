@@ -212,7 +212,20 @@ struct SP_IMPLICITL_STATE_INTERNAL{TI, TF, TM} <: SOLVER_STATE_INTERNAL
   rv_old :: Vector{TF}
   # broyden_workspace_z :: Vector{TF}
   # broyden_workspace_v :: Vector{TF}
-  # Anderson
+  # # Anderson
+  # MP :: Matrix{TF}
+  # MR :: Matrix{TF}
+  # delta_z_old :: Vector{TF}
+  # delta_v_old :: Vector{TF}
+  # delta_rz_old :: Vector{TF}
+  # delta_rv_old :: Vector{TF}
+  # aa_wsp :: Vector{TF}
+  # aa_Q :: Matrix{TF}
+  # aa_R :: LA.UpperTriangular{TF, Matrix{TF}}
+  # aa_gamma :: Vector{TF}
+end
+
+struct AA_STATE{TF}
   MP :: Matrix{TF}
   MR :: Matrix{TF}
   delta_z_old :: Vector{TF}
@@ -228,6 +241,7 @@ end
 struct SPOCK{TI, TF, TM} <: CUSTOM_SOLVER_MODEL
   state :: GENERIC_SOLVER_STATE{TF, TI}
   solver_state_internal :: SP_IMPLICITL_STATE_INTERNAL{TI, TF, TM}
+  qn_state :: AA_STATE{TF}
   problem :: GENERIC_PROBLEM_DEFINITION{TF, TI}
 end
 
