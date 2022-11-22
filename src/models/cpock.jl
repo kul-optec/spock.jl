@@ -1,4 +1,4 @@
-function build_model_cp_implicitl(
+function build_cpock(
   scen_tree :: ScenarioTree, 
   cost :: Cost, 
   dynamics :: Dynamics, 

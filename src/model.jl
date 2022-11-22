@@ -273,9 +273,9 @@ Supported combinations of solver options:
 """
 
 if solver_options.algorithm == CP
-  return build_model_cp_implicitl(scen_tree, cost, dynamics, rms, constraints)
+  return build_cpock(scen_tree, cost, dynamics, rms, constraints)
 elseif solver_options.algorithm == SP
-  return build_model_sp_implicitl(scen_tree, cost, dynamics, rms, constraints, solver_options.qnewton)
+  return build_spock(scen_tree, cost, dynamics, rms, constraints, solver_options.qnewton)
 end
 
 error("This combination of solver options is not supported.")

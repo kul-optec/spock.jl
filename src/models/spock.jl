@@ -1,4 +1,4 @@
-function build_model_sp_implicitl(
+function build_spock(
   scen_tree :: ScenarioTree, 
   cost :: Cost, 
   dynamics :: Dynamics, 

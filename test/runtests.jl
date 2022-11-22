@@ -19,7 +19,7 @@ include("../src/model_algorithms/sp.jl")
 include("../src/model_dynamics/implicit_l.jl")
 
 ## The specific models
-include("../src/models/model_cp_implicit.jl")
+include("../src/models/cpock.jl")
 include("../src/models/model_mosek.jl")
 
 

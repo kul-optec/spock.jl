@@ -25,8 +25,8 @@ module spock
   include("model_dynamics/implicit_l.jl")
 
   ## The specific models
-  include("models/model_cp_implicit.jl")
-  include("models/model_sp_implicit.jl")
+  include("models/cpock.jl")
+  include("models/spock.jl")
   include("models/model_mosek.jl")
 
   # Precompile for the required arguments
