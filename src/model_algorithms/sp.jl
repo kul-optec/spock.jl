@@ -8,10 +8,10 @@ function update_zbar!(
 ) where {TF <: Real}
 
   # zbar = -gamma * L' * v + z
-  copyto!(model.solver_state.zbar, model.solver_state.z)
-  spock_mul!(model, model.solver_state.zbar, true, model.solver_state.v, -gamma, 1.)
+  copyto!(model.state.zbar, model.state.z)
+  spock_mul!(model, model.state.zbar, true, model.state.v, -gamma, 1.)
   # zbar = prox_f(zbar)
-  prox_f!(model, model.solver_state.zbar, gamma)
+  prox_f!(model, model.state.zbar, gamma)
 end
 
 function update_vbar!(
@@ -20,15 +20,15 @@ function update_vbar!(
 ) where {TF <: Real}
 
   # z_workspace = 2 * zbar - z
-  copyto!(model.solver_state.z_workspace, model.solver_state.z)
-  LA.BLAS.axpby!(2., model.solver_state.zbar, -1., model.solver_state.z_workspace)
+  copyto!(model.state.z_workspace, model.state.z)
+  LA.BLAS.axpby!(2., model.state.zbar, -1., model.state.z_workspace)
 
   # vbar = sigma * L (z_workspace) + v
-  copyto!(model.solver_state.vbar, model.solver_state.v)
-  spock_mul!(model, model.solver_state.vbar, false, model.solver_state.z_workspace, sigma, 1.)
+  copyto!(model.state.vbar, model.state.v)
+  spock_mul!(model, model.state.vbar, false, model.state.z_workspace, sigma, 1.)
 
   # vbar = prox_h_conj(vbar)
-  prox_h_conj!(model, model.solver_state.vbar, sigma)
+  prox_h_conj!(model, model.state.vbar, sigma)
 end
 
 function update_residual!(
@@ -40,14 +40,14 @@ function update_residual!(
   Updates the fixed point residual r = (z - zbar, v - vbar)
   """
 
-  for i in eachindex(model.solver_state.z)
-    model.solver_state.rz[i] = model.solver_state.z[i] - model.solver_state.zbar[i]
+  for i in eachindex(model.state.z)
+    model.state.rz[i] = model.state.z[i] - model.state.zbar[i]
   end
-  for i in eachindex(model.solver_state.v)
-    model.solver_state.rv[i] = model.solver_state.v[i] - model.solver_state.vbar[i]
+  for i in eachindex(model.state.v)
+    model.state.rv[i] = model.state.v[i] - model.state.vbar[i]
   end
 
-  return spock_norm(model, model.solver_state.rz, model.solver_state.rv, gamma, sigma)
+  return spock_norm(model, model.state.rz, model.state.rv, gamma, sigma)
 end
 
 function update_z!(
@@ -55,8 +55,8 @@ function update_z!(
   lambda :: TF
 ) where {TF <: Real}
 
-  @simd for i = 1:model.solver_state.nz
-    @inbounds @fastmath model.solver_state.z[i] = lambda * model.solver_state.zbar[i] + (1 - lambda) * model.solver_state.z[i]
+  @simd for i = 1:model.state.nz
+    @inbounds @fastmath model.state.z[i] = lambda * model.state.zbar[i] + (1 - lambda) * model.state.z[i]
   end
 end
 
@@ -65,8 +65,8 @@ function update_v!(
   lambda :: TF
 ) where {TF <: Real}
 
-  @simd for i = 1:model.solver_state.nv
-    @inbounds @fastmath model.solver_state.v[i] = lambda * model.solver_state.vbar[i] + (1 - lambda) * model.solver_state.v[i]
+  @simd for i = 1:model.state.nv
+    @inbounds @fastmath model.state.v[i] = lambda * model.state.vbar[i] + (1 - lambda) * model.state.v[i]
   end
 end
 
@@ -89,16 +89,16 @@ function perform_k0!(
 
   eta = rnorm
 
-  for i in eachindex(model.solver_state.z)
-    model.solver_state.z[i] += model.solver_state_internal.dz[i]
+  for i in eachindex(model.state.z)
+    model.state.z[i] += model.solver_state_internal.dz[i]
   end
-  for i in eachindex(model.solver_state.v)
-    model.solver_state.v[i] += model.solver_state_internal.dv[i]
+  for i in eachindex(model.state.v)
+    model.state.v[i] += model.solver_state_internal.dv[i]
   end
 
   # TODO: to use restarted Broyden correctly, update wbar here too
-  copyto!(model.solver_state_internal.w, model.solver_state.z)
-  copyto!(model.solver_state_internal.u, model.solver_state.v)
+  copyto!(model.solver_state_internal.w, model.state.z)
+  copyto!(model.solver_state_internal.u, model.state.v)
 
   loop = false
 
@@ -122,10 +122,10 @@ function generate_candidate_update!(
 
   ### (w, u) = (z, v) + tau (dz, dv)
   for i in eachindex(model.solver_state_internal.w)
-    model.solver_state_internal.w[i] = model.solver_state.z[i] + tau * model.solver_state_internal.dz[i]
+    model.solver_state_internal.w[i] = model.state.z[i] + tau * model.solver_state_internal.dz[i]
   end
   for i in eachindex(model.solver_state_internal.u)
-    model.solver_state_internal.u[i] = model.solver_state.v[i] + tau * model.solver_state_internal.dv[i]
+    model.solver_state_internal.u[i] = model.state.v[i] + tau * model.solver_state_internal.dv[i]
   end
 
 end
@@ -181,8 +181,8 @@ function perform_k1!(
   rtilde_norm :: TF
 ) where {TF <: Real, TI <: Integer}
 
-  copyto!(model.solver_state.z, model.solver_state_internal.w)
-  copyto!(model.solver_state.v, model.solver_state_internal.u)
+  copyto!(model.state.z, model.solver_state_internal.w)
+  copyto!(model.state.v, model.solver_state_internal.u)
 
   r_safe = rtilde_norm + q^iter
   loop = false
@@ -210,11 +210,11 @@ function perform_k2!(
   # Normalize rho
   rho /= rtilde_norm^2
 
-  for i in eachindex(model.solver_state.z)
-    model.solver_state.z[i] -= lambda * rho * model.solver_state_internal.rw[i]
+  for i in eachindex(model.state.z)
+    model.state.z[i] -= lambda * rho * model.solver_state_internal.rw[i]
   end
-  for i in eachindex(model.solver_state.v)
-    model.solver_state.v[i] -= lambda * rho * model.solver_state_internal.ru[i]
+  for i in eachindex(model.state.v)
+    model.state.v[i] -= lambda * rho * model.solver_state_internal.ru[i]
   end
 
   loop = false
@@ -233,24 +233,24 @@ function update_sy!(
   model :: MODEL_SP
 )
   # TODO: Only for Broyden
-  # nz = model.solver_state.nz
-  # nv = model.solver_state.nv
+  # nz = model.state.nz
+  # nv = model.state.nv
 
   # for i = 1:nz
-  #   model.solver_state_internal.sz[i] = model.solver_state_internal.w[i] - model.solver_state.z_old[i]
+  #   model.solver_state_internal.sz[i] = model.solver_state_internal.w[i] - model.state.z_old[i]
   #   model.solver_state_internal.yz[i] = model.solver_state_internal.rw[i] - model.solver_state_internal.rz_old[i]
   # end
   # for i = 1:nv
-  #   model.solver_state_internal.sv[i] = model.solver_state_internal.u[i] - model.solver_state.v_old[i]
+  #   model.solver_state_internal.sv[i] = model.solver_state_internal.u[i] - model.state.v_old[i]
   #   model.solver_state_internal.yv[i] = model.solver_state_internal.ru[i] - model.solver_state_internal.rv_old[i]
   # end
 
   # Update the z / v / rz / rv -old variables for next iteration
-  copyto!(model.solver_state.z_old, model.solver_state.z)
-  copyto!(model.solver_state.v_old, model.solver_state.v)
+  copyto!(model.state.z_old, model.state.z)
+  copyto!(model.state.v_old, model.state.v)
 
-  copyto!(model.solver_state_internal.rz_old, model.solver_state.rz)
-  copyto!(model.solver_state_internal.rv_old, model.solver_state.rv)
+  copyto!(model.solver_state_internal.rz_old, model.state.rz)
+  copyto!(model.solver_state_internal.rv_old, model.state.rv)
 
 end
 
@@ -258,11 +258,11 @@ function update_delta_r!(
   model :: MODEL_SP
 )
 
-  for i in eachindex(model.solver_state.delta_z)
-    model.solver_state.delta_rz[i] = model.solver_state.rz[i] - model.solver_state_internal.rz_old[i]
+  for i in eachindex(model.state.delta_z)
+    model.state.delta_rz[i] = model.state.rz[i] - model.solver_state_internal.rz_old[i]
   end
-  for i in eachindex(model.solver_state.delta_v)
-    model.solver_state.delta_rv[i] = model.solver_state.rv[i] - model.solver_state_internal.rv_old[i]
+  for i in eachindex(model.state.delta_v)
+    model.state.delta_rv[i] = model.state.rv[i] - model.solver_state_internal.rv_old[i]
   end
 
 end
@@ -276,31 +276,31 @@ function should_terminate!(
   backtrack_count :: TI,
 ) where {TF <: Real, TI <: Integer}
 
-  for i in eachindex(model.solver_state.delta_z)
-    model.solver_state.delta_z[i] = model.solver_state.z[i] - model.solver_state.z_old[i]
+  for i in eachindex(model.state.delta_z)
+    model.state.delta_z[i] = model.state.z[i] - model.state.z_old[i]
   end
-  for i in eachindex(model.solver_state.delta_v)
-    model.solver_state.delta_v[i] = model.solver_state.v[i] - model.solver_state.v_old[i]
+  for i in eachindex(model.state.delta_v)
+    model.state.delta_v[i] = model.state.v[i] - model.state.v_old[i]
   end
 
-  copyto!(model.solver_state.xi_1, model.solver_state.delta_z)
-  copyto!(model.solver_state.xi_2, model.solver_state.delta_v)
+  copyto!(model.state.xi_1, model.state.delta_z)
+  copyto!(model.state.xi_2, model.state.delta_v)
 
   # xi_1 <- -1/alpha2 xi_1 + L' * delta_v
-  spock_mul!(model, model.solver_state.xi_1, true, model.solver_state.delta_v, 1., -1. / alpha1)
+  spock_mul!(model, model.state.xi_1, true, model.state.delta_v, 1., -1. / alpha1)
   # xi_2 <- -1/alpha2 xi_2 + L * delta_z
-  spock_mul!(model, model.solver_state.xi_2, false, model.solver_state.delta_z, 1., -1. / alpha2)
+  spock_mul!(model, model.state.xi_2, false, model.state.delta_z, 1., -1. / alpha2)
 
-  xi_1 = LA.norm(model.solver_state.xi_1, Inf)
-  xi_2 = LA.norm(model.solver_state.xi_2, Inf)
+  xi_1 = LA.norm(model.state.xi_1, Inf)
+  xi_2 = LA.norm(model.state.xi_2, Inf)
 
   res = false
 
   if verbose === LOG
-    # copyto!(model.solver_state.xi, model.solver_state.xi_1)
-    # spock_mul!(model, model.solver_state.xi, true, model.solver_state.xi_2, 1., 1.)
+    # copyto!(model.state.xi, model.state.xi_1)
+    # spock_mul!(model, model.state.xi, true, model.state.xi_2, 1., 1.)
 
-    # xi = LA.norm(model.solver_state.xi, Inf)
+    # xi = LA.norm(model.state.xi, Inf)
     xi = max(xi_1, xi_2)
 
     open("examples/output/xi_sp.dat", "a") do io
@@ -320,12 +320,12 @@ function should_terminate!(
       res = true
     end
   # Only check third condition when first two have succeeded (avoid extra L' if possible)
-  # elseif xi_1 <= tol * LA.norm(model.solver_state.z_old, Inf) && xi_2 <= tol * LA.norm(model.solver_state.v_old, Inf)
-  elseif xi_1 <= max(tol * model.solver_state.res_0[1], tol) && xi_2 <= max(tol * model.solver_state.res_0[2], tol)
-    # copyto!(model.solver_state.xi, model.solver_state.xi_1)
-    # spock_mul!(model, model.solver_state.xi, true, model.solver_state.xi_2, 1., 1.)
+  # elseif xi_1 <= tol * LA.norm(model.state.z_old, Inf) && xi_2 <= tol * LA.norm(model.state.v_old, Inf)
+  elseif xi_1 <= max(tol * model.state.res_0[1], tol) && xi_2 <= max(tol * model.state.res_0[2], tol)
+    # copyto!(model.state.xi, model.state.xi_1)
+    # spock_mul!(model, model.state.xi, true, model.state.xi_2, 1., 1.)
 
-    # xi = LA.norm(model.solver_state.xi, Inf)
+    # xi = LA.norm(model.state.xi, Inf)
 
     # if xi <= tol
     #   return true
@@ -333,11 +333,11 @@ function should_terminate!(
     res = true
   end
 
-  if model.solver_state.res_0[1] === -Inf
-    model.solver_state.res_0[1] = xi_1
+  if model.state.res_0[1] === -Inf
+    model.state.res_0[1] = xi_1
   end
-  if model.solver_state.res_0[2] === -Inf
-    model.solver_state.res_0[2] = xi_2
+  if model.state.res_0[2] === -Inf
+    model.state.res_0[2] = xi_2
   end
 
   return res
@@ -347,11 +347,11 @@ function update_delta_old!(
   model :: MODEL_SP
 )
 
-  copyto!(model.solver_state_internal.delta_z_old, model.solver_state.delta_z)
-  copyto!(model.solver_state_internal.delta_v_old, model.solver_state.delta_v)
+  copyto!(model.solver_state_internal.delta_z_old, model.state.delta_z)
+  copyto!(model.solver_state_internal.delta_v_old, model.state.delta_v)
 
-  copyto!(model.solver_state_internal.delta_rz_old, model.solver_state.delta_rz)
-  copyto!(model.solver_state_internal.delta_rv_old, model.solver_state.delta_rv)
+  copyto!(model.solver_state_internal.delta_rz_old, model.state.delta_rz)
+  copyto!(model.solver_state_internal.delta_rv_old, model.state.delta_rv)
 
 end
 
@@ -373,7 +373,7 @@ function run_sp!(
 )
 
   if sigma === nothing || gamma === nothing
-    sigma = 0.99 / sqrt(model.solver_state.L_norm)
+    sigma = 0.99 / sqrt(model.state.L_norm)
     gamma = sigma
   end
 
@@ -417,10 +417,10 @@ function run_sp!(
           continue
         end
 
-        for k = 1:model.solver_state.nz
+        for k = 1:model.state.nz
           model.solver_state_internal.workspace_rho_z[k] = model.solver_state_internal.rw[k] - tau * model.solver_state_internal.dz[k]
         end
-        for k = 1:model.solver_state.nv
+        for k = 1:model.state.nv
           model.solver_state_internal.workspace_rho_v[k] = model.solver_state_internal.ru[k] - tau * model.solver_state_internal.dv[k]
         end
         rho = spock_dot(

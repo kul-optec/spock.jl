@@ -47,11 +47,11 @@ x0_cosmo = copy(x0)
 for t = 1:MPC_N
   model_timings[t, m] += @elapsed spock.solve_model!(model, x0, tol=1e-3)
 
-  x = model.solver_state.z[model.solver_state_internal.x_inds]
-  u = model.solver_state.z[model.solver_state_internal.u_inds]
-  s = model.solver_state.z[model.solver_state_internal.s_inds]
-  tau = model.solver_state.z[model.solver_state_internal.tau_inds]
-  y = model.solver_state.z[model.solver_state_internal.y_inds]
+  x = model.state.z[model.solver_state_internal.x_inds]
+  u = model.state.z[model.solver_state_internal.u_inds]
+  s = model.state.z[model.solver_state_internal.s_inds]
+  tau = model.state.z[model.solver_state_internal.tau_inds]
+  y = model.state.z[model.solver_state_internal.y_inds]
 
   model_mosek = spock.build_model_mosek(scen_tree, cost, dynamics, rms, constraints)
   # if t > 1
@@ -161,7 +161,7 @@ for t = 1:MPC_N
   global tau_cosmo = value.(model_cosmo[:tau])
   global y_cosmo = value.(model_cosmo[:y])
 
-  u = model.solver_state.z[model.solver_state_internal.u_inds[1:nu]]
+  u = model.state.z[model.solver_state_internal.u_inds[1:nu]]
   u_mosek = value.(model_mosek[:u][1:nu])
   # u_gurobi = value.(model_gurobi[:u][1:nu])
   u_ipopt = value.(model_ipopt[:u][1:nu])

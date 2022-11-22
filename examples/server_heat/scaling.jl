@@ -73,7 +73,7 @@ for m = 1:M
       sedumi_timings[N - 2] += @elapsed spock.solve_model(model_sedumi, x0)
     end
 
-    # println("SPOCK: $(model.solver_state.z[model.solver_state_internal.s_inds[1]]), MOSEK: $(value(model_mosek[:s][1]))")
+    # println("SPOCK: $(model.state.z[model.solver_state_internal.s_inds[1]]), MOSEK: $(value(model_mosek[:s][1]))")
 
   end
 end

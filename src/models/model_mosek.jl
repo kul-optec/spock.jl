@@ -7,7 +7,7 @@ using MosekTools, Ipopt, Gurobi, SCS, SDPT3, SeDuMi, COSMO
 #### COST
 
 function impose_cost(model :: Model, problem_definition :: GENERIC_PROBLEM_DEFINITION)
-  anc_mapping = problem_definition.scen_tree.anc_mapping
+  anc_mapping = problem.scen_tree.anc_mapping
   x = model[:x]
   u = model[:u]
   s = model[:s]
@@ -15,14 +15,14 @@ function impose_cost(model :: Model, problem_definition :: GENERIC_PROBLEM_DEFIN
 
   @constraint(
     model,
-    nonleaf_cost[node = 2:problem_definition.scen_tree.n],
-    (x[node_to_x(problem_definition, anc_mapping[node])]' * problem_definition.cost.Q[node - 1] * x[node_to_x(problem_definition, anc_mapping[node])] + u[node_to_u(problem_definition, anc_mapping[node])]' * problem_definition.cost.R[node - 1] * u[node_to_u(problem_definition, anc_mapping[node])]) <= model[:tau][node - 1]
+    nonleaf_cost[node = 2:problem.scen_tree.n],
+    (x[node_to_x(problem_definition, anc_mapping[node])]' * problem.cost.Q[node - 1] * x[node_to_x(problem_definition, anc_mapping[node])] + u[node_to_u(problem_definition, anc_mapping[node])]' * problem.cost.R[node - 1] * u[node_to_u(problem_definition, anc_mapping[node])]) <= model[:tau][node - 1]
   )
 
   @constraint(
     model,
-    leaf_cost[i = problem_definition.scen_tree.leaf_node_min_index : problem_definition.scen_tree.leaf_node_max_index],
-    x[node_to_x(problem_definition, i)]' * problem_definition.cost.QN[i - problem_definition.scen_tree.leaf_node_min_index + 1] * x[node_to_x(problem_definition, i)] <= model[:s][i]
+    leaf_cost[i = problem.scen_tree.leaf_node_min_index : problem.scen_tree.leaf_node_max_index],
+    x[node_to_x(problem_definition, i)]' * problem.cost.QN[i - problem.scen_tree.leaf_node_min_index + 1] * x[node_to_x(problem_definition, i)] <= model[:s][i]
   )
 end
 
@@ -34,12 +34,12 @@ function impose_dynamics(model :: Model, problem_definition :: GENERIC_PROBLEM_D
 
   @constraint(
       model,
-      dynamics[i=2:problem_definition.scen_tree.n], # Non-root nodes, so all except i = 1
+      dynamics[i=2:problem.scen_tree.n], # Non-root nodes, so all except i = 1
       x[
           node_to_x(problem_definition, i)
       ] .== 
-          problem_definition.dynamics.A[problem_definition.scen_tree.node_info[i].w] * x[node_to_x(problem_definition, problem_definition.scen_tree.anc_mapping[i])]
-          + problem_definition.dynamics.B[problem_definition.scen_tree.node_info[i].w] * u[node_to_u(problem_definition, problem_definition.scen_tree.anc_mapping[i])]
+          problem.dynamics.A[problem.scen_tree.node_info[i].w] * x[node_to_x(problem_definition, problem.scen_tree.anc_mapping[i])]
+          + problem.dynamics.B[problem.scen_tree.node_info[i].w] * u[node_to_u(problem_definition, problem.scen_tree.anc_mapping[i])]
   )
 end
 
@@ -50,32 +50,32 @@ function impose_box_constraints(
   x = model[:x]
   u = model[:u]
 
-  x_min = problem_definition.constraints.x_min
-  x_max = problem_definition.constraints.x_max
-  u_min = problem_definition.constraints.u_min
-  u_max = problem_definition.constraints.u_max
+  x_min = problem.constraints.x_min
+  x_max = problem.constraints.x_max
+  u_min = problem.constraints.u_min
+  u_max = problem.constraints.u_max
 
   @constraint(
     model,
-    x_box_min[i=1:problem_definition.scen_tree.n],
+    x_box_min[i=1:problem.scen_tree.n],
     x[node_to_x(problem_definition, i)] .>= x_min
   )
 
   @constraint(
     model,
-    x_box_max[i=1:problem_definition.scen_tree.n],
+    x_box_max[i=1:problem.scen_tree.n],
     x[node_to_x(problem_definition, i)] .<= x_max
   )
 
   @constraint(
     model,
-    u_box_min[i=1:problem_definition.scen_tree.n_non_leaf_nodes],
+    u_box_min[i=1:problem.scen_tree.n_non_leaf_nodes],
     u[node_to_u(problem_definition, i)] .>= u_min
   )
 
   @constraint(
     model,
-    u_box_max[i=1:problem_definition.scen_tree.n_non_leaf_nodes],
+    u_box_max[i=1:problem.scen_tree.n_non_leaf_nodes],
     u[node_to_u(problem_definition, i)] .<= u_max
   )
 end
@@ -84,8 +84,8 @@ end
 
 function add_risk_epi_constraints(model::Model, problem_definition :: GENERIC_PROBLEM_DEFINITION)
   ny = 0
-  for i = 1:length(problem_definition.rms)
-    ny += length(problem_definition.rms[i].b)
+  for i = 1:length(problem.rms)
+    ny += length(problem.rms[i].b)
   end
   @variable(model, y[i=1:ny])
 
@@ -94,27 +94,27 @@ function add_risk_epi_constraints(model::Model, problem_definition :: GENERIC_PR
   tau = model[:tau]
 
   y_offset = 0
-  for i = 1:problem_definition.scen_tree.n_non_leaf_nodes
+  for i = 1:problem.scen_tree.n_non_leaf_nodes
     # y in K^*
     dim_offset = 0
-    for j = 1:1#length(problem_definition.rms[i].K.subcones)
-      dim = MOI.dimension(problem_definition.rms[i].K.subcones[j])
-      @constraint(model, in(y[y_offset + dim_offset + 1 : y_offset + dim_offset + dim], MOI.dual_set(problem_definition.rms[i].K.subcones[j])))
+    for j = 1:1#length(problem.rms[i].K.subcones)
+      dim = MOI.dimension(problem.rms[i].K.subcones[j])
+      @constraint(model, in(y[y_offset + dim_offset + 1 : y_offset + dim_offset + dim], MOI.dual_set(problem.rms[i].K.subcones[j])))
       dim_offset += dim
     end
 
     # y' * b <= s
     @constraint(
       model,
-      y[y_offset + 1 : y_offset + length(problem_definition.rms[i].b)]' * problem_definition.rms[i].b <= s[i]
+      y[y_offset + 1 : y_offset + length(problem.rms[i].b)]' * problem.rms[i].b <= s[i]
     )
 
 
     # E^i' * y = tau + s
-    for j in problem_definition.scen_tree.child_mapping[i]
+    for j in problem.scen_tree.child_mapping[i]
       @constraint(
         model,
-        problem_definition.rms[i].E' * y[y_offset + 1 : y_offset + length(problem_definition.rms[i].b)] .== tau[j - 1] + s[j]
+        problem.rms[i].E' * y[y_offset + 1 : y_offset + length(problem.rms[i].b)] .== tau[j - 1] + s[j]
       )
     end
 
@@ -122,11 +122,11 @@ function add_risk_epi_constraints(model::Model, problem_definition :: GENERIC_PR
     # F' y = 0
     @constraint(
       model,
-      problem_definition.rms[i].F' * y[y_offset + 1 : y_offset + length(problem_definition.rms[i].b)] .== 0.
+      problem.rms[i].F' * y[y_offset + 1 : y_offset + length(problem.rms[i].b)] .== 0.
     )
 
 
-    y_offset += length(problem_definition.rms[i].b)
+    y_offset += length(problem.rms[i].b)
   end
 end
 
@@ -161,8 +161,8 @@ function build_model_mosek(
   model = Model(Mosek.Optimizer)
   set_silent(model)
 
-  @variable(model, x[i=1:scen_tree.n * problem_definition.nx])
-  @variable(model, u[i=1:scen_tree.n_non_leaf_nodes * problem_definition.nu])
+  @variable(model, x[i=1:scen_tree.n * problem.nx])
+  @variable(model, u[i=1:scen_tree.n_non_leaf_nodes * problem.nu])
   @variable(model, tau[i=1:scen_tree.n - 1])
   @variable(model, s[i=1:scen_tree.n * 1])
 
@@ -214,8 +214,8 @@ function build_model_gurobi(
   model = Model(Gurobi.Optimizer)
   set_silent(model)
 
-  @variable(model, x[i=1:scen_tree.n * problem_definition.nx])
-  @variable(model, u[i=1:scen_tree.n_non_leaf_nodes * problem_definition.nu])
+  @variable(model, x[i=1:scen_tree.n * problem.nx])
+  @variable(model, u[i=1:scen_tree.n_non_leaf_nodes * problem.nu])
   @variable(model, tau[i=1:scen_tree.n - 1])
   @variable(model, s[i=1:scen_tree.n * 1])
 
@@ -267,8 +267,8 @@ function build_model_ipopt(
   model = Model(Ipopt.Optimizer)
   set_silent(model)
 
-  @variable(model, x[i=1:scen_tree.n * problem_definition.nx])
-  @variable(model, u[i=1:scen_tree.n_non_leaf_nodes * problem_definition.nu])
+  @variable(model, x[i=1:scen_tree.n * problem.nx])
+  @variable(model, u[i=1:scen_tree.n_non_leaf_nodes * problem.nu])
   @variable(model, tau[i=1:scen_tree.n - 1])
   @variable(model, s[i=1:scen_tree.n * 1])
 
@@ -320,8 +320,8 @@ function build_model_scs(
   model = Model(SCS.Optimizer)
   set_silent(model)
 
-  @variable(model, x[i=1:scen_tree.n * problem_definition.nx])
-  @variable(model, u[i=1:scen_tree.n_non_leaf_nodes * problem_definition.nu])
+  @variable(model, x[i=1:scen_tree.n * problem.nx])
+  @variable(model, u[i=1:scen_tree.n_non_leaf_nodes * problem.nu])
   @variable(model, tau[i=1:scen_tree.n - 1])
   @variable(model, s[i=1:scen_tree.n * 1])
 
@@ -373,8 +373,8 @@ function build_model_sdpt3(
   model = Model(SDPT3.Optimizer)
   set_silent(model)
 
-  @variable(model, x[i=1:scen_tree.n * problem_definition.nx])
-  @variable(model, u[i=1:scen_tree.n_non_leaf_nodes * problem_definition.nu])
+  @variable(model, x[i=1:scen_tree.n * problem.nx])
+  @variable(model, u[i=1:scen_tree.n_non_leaf_nodes * problem.nu])
   @variable(model, tau[i=1:scen_tree.n - 1])
   @variable(model, s[i=1:scen_tree.n * 1])
 
@@ -426,8 +426,8 @@ function build_model_sedumi(
   model = Model(SeDuMi.Optimizer)
   set_silent(model)
 
-  @variable(model, x[i=1:scen_tree.n * problem_definition.nx])
-  @variable(model, u[i=1:scen_tree.n_non_leaf_nodes * problem_definition.nu])
+  @variable(model, x[i=1:scen_tree.n * problem.nx])
+  @variable(model, u[i=1:scen_tree.n_non_leaf_nodes * problem.nu])
   @variable(model, tau[i=1:scen_tree.n - 1])
   @variable(model, s[i=1:scen_tree.n * 1])
 
@@ -479,8 +479,8 @@ function build_model_cosmo(
   model = Model(COSMO.Optimizer)
   set_silent(model)
 
-  @variable(model, x[i=1:scen_tree.n * problem_definition.nx])
-  @variable(model, u[i=1:scen_tree.n_non_leaf_nodes * problem_definition.nu])
+  @variable(model, x[i=1:scen_tree.n * problem.nx])
+  @variable(model, u[i=1:scen_tree.n_non_leaf_nodes * problem.nu])
   @variable(model, tau[i=1:scen_tree.n - 1])
   @variable(model, s[i=1:scen_tree.n * 1])
 

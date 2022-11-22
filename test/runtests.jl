@@ -38,11 +38,11 @@ include("model_dynamics/implicit_L.jl")
 ##########
 # for N = 3
 
-x = cp_model.solver_state.z[1 : 14]
-u = cp_model.solver_state.z[15: 17]
-s = cp_model.solver_state.z[18:24]
-tau = cp_model.solver_state.z[25:30]
-y = cp_model.solver_state.z[31:45]
+x = cp_model.state.z[1 : 14]
+u = cp_model.state.z[15: 17]
+s = cp_model.state.z[18:24]
+tau = cp_model.state.z[25:30]
+y = cp_model.state.z[31:45]
 
 println("x = $(x)")
 println("u = $(u)")
@@ -104,15 +104,15 @@ println("y = $(y)")
 # Dual variables
 ##################
 
-# v1 = cp_model.solver_state.vbar[1:15]
-# v2 = cp_model.solver_state.vbar[16:18]
-# v3 = cp_model.solver_state.vbar[19:30]
-# v4 = cp_model.solver_state.vbar[31:36]
-# v5 = cp_model.solver_state.vbar[17:42]
-# v6 = cp_model.solver_state.vbar[43:48]
-# v11 = cp_model.solver_state.vbar[49:56]
-# v12 = cp_model.solver_state.vbar[57:60]
-# v13 = cp_model.solver_state.vbar[61:64]
+# v1 = cp_model.state.vbar[1:15]
+# v2 = cp_model.state.vbar[16:18]
+# v3 = cp_model.state.vbar[19:30]
+# v4 = cp_model.state.vbar[31:36]
+# v5 = cp_model.state.vbar[17:42]
+# v6 = cp_model.state.vbar[43:48]
+# v11 = cp_model.state.vbar[49:56]
+# v12 = cp_model.state.vbar[57:60]
+# v13 = cp_model.state.vbar[61:64]
 
 
 #######################
@@ -121,8 +121,8 @@ println("y = $(y)")
 
 # @testset "Projection onto dynamics is firmly nonexpansive" begin
 #   for _ = 1:20
-#     nz = cp_model.solver_state.nz
-#     cp_model.problem_definition.x0[1:2] = [0.1, 0.1]
+#     nz = cp_model.state.nz
+#     cp_model.problem.x0[1:2] = [0.1, 0.1]
 #     proj1 = rand(nz); z1 = copy(proj1)
 #     proj2 = rand(nz); z2 = copy(proj2)
 #     # proj1 = 50. *ones(nz); proj1[1:2] = [0.1, 0.1]; z1 = copy(proj1)
@@ -147,7 +147,7 @@ println("y = $(y)")
 
 # @testset "Kernel projection is firmly nonexpansive" begin
 #   for _ = 1:10
-#     nz = cp_model.solver_state.nz
+#     nz = cp_model.state.nz
 #     proj1 = rand(nz); z1 = copy(proj1)
 #     proj2 = rand(nz); z2 = copy(proj2)
 #     gamma = 0.1
@@ -156,7 +156,7 @@ println("y = $(y)")
 #     projection_S2!(cp_model, proj2, gamma)
 
 #     start = cp_model.solver_state_internal.s_inds[1] + 1
-#     stop = cp_model.solver_state.nz
+#     stop = cp_model.state.nz
 #     z1 = z1[start : stop]; z2 = z2[start:stop]
 #     proj1 = proj1[start : stop]; proj2 = proj2[start:stop]
 

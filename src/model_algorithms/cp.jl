@@ -8,10 +8,10 @@ function update_zbar!(
 ) where {TF <: Real}
 
   # zbar = -gamma * L' * v + z
-  copyto!(model.solver_state.zbar, model.solver_state.z)
-  spock_mul!(model, model.solver_state.zbar, true, model.solver_state.v, -gamma, 1.)
+  copyto!(model.state.zbar, model.state.z)
+  spock_mul!(model, model.state.zbar, true, model.state.v, -gamma, 1.)
   # zbar = prox_f(zbar)
-  prox_f!(model, model.solver_state.zbar, gamma)
+  prox_f!(model, model.state.zbar, gamma)
 end
 
 function update_vbar!(
@@ -20,15 +20,15 @@ function update_vbar!(
 ) where {TF <: Real}
 
   # z_workspace = 2 * zbar - z
-  copyto!(model.solver_state.z_workspace, model.solver_state.z)
-  LA.BLAS.axpby!(2., model.solver_state.zbar, -1., model.solver_state.z_workspace)
+  copyto!(model.state.z_workspace, model.state.z)
+  LA.BLAS.axpby!(2., model.state.zbar, -1., model.state.z_workspace)
 
   # vbar = sigma * L (z_workspace) + v
-  copyto!(model.solver_state.vbar, model.solver_state.v)
-  spock_mul!(model, model.solver_state.vbar, false, model.solver_state.z_workspace, sigma, 1.)
+  copyto!(model.state.vbar, model.state.v)
+  spock_mul!(model, model.state.vbar, false, model.state.z_workspace, sigma, 1.)
 
   # vbar = prox_h_conj(vbar)
-  prox_h_conj!(model, model.solver_state.vbar, sigma)
+  prox_h_conj!(model, model.state.vbar, sigma)
 end
 
 function update_z!(
@@ -36,8 +36,8 @@ function update_z!(
   lambda :: TF
 ) where {TF <: Real}
 
-  @simd for i = 1:model.solver_state.nz
-    @inbounds @fastmath model.solver_state.z[i] = lambda * model.solver_state.zbar[i] + (1 - lambda) * model.solver_state.z[i]
+  @simd for i = 1:model.state.nz
+    @inbounds @fastmath model.state.z[i] = lambda * model.state.zbar[i] + (1 - lambda) * model.state.z[i]
   end
 end
 
@@ -46,8 +46,8 @@ function update_v!(
   lambda :: TF
 ) where {TF <: Real}
 
-  @simd for i = 1:model.solver_state.nv
-    @inbounds @fastmath model.solver_state.v[i] = lambda * model.solver_state.vbar[i] + (1 - lambda) * model.solver_state.v[i]
+  @simd for i = 1:model.state.nv
+    @inbounds @fastmath model.state.v[i] = lambda * model.state.vbar[i] + (1 - lambda) * model.state.v[i]
   end
 end
 
@@ -59,31 +59,31 @@ function should_terminate!(
   verbose :: VERBOSE_LEVEL
 ) where {TF <: Real}
 
-  for i = 1:model.solver_state.nz
-    model.solver_state.delta_z[i] = model.solver_state.z[i] - model.solver_state.z_old[i]
+  for i = 1:model.state.nz
+    model.state.delta_z[i] = model.state.z[i] - model.state.z_old[i]
   end
-  for i = 1:model.solver_state.nv
-    model.solver_state.delta_v[i] = model.solver_state.v[i] - model.solver_state.v_old[i]
+  for i = 1:model.state.nv
+    model.state.delta_v[i] = model.state.v[i] - model.state.v_old[i]
   end
 
-  copyto!(model.solver_state.xi_1, model.solver_state.delta_z)
-  copyto!(model.solver_state.xi_2, model.solver_state.delta_v)
+  copyto!(model.state.xi_1, model.state.delta_z)
+  copyto!(model.state.xi_2, model.state.delta_v)
 
   # xi_1 <- -1/alpha2 xi_1 + L' * delta_v
-  spock_mul!(model, model.solver_state.xi_1, true, model.solver_state.delta_v, 1., -1. / alpha1)
+  spock_mul!(model, model.state.xi_1, true, model.state.delta_v, 1., -1. / alpha1)
   # xi_2 <- -1/alpha2 xi_2 + L * delta_z
-  spock_mul!(model, model.solver_state.xi_2, false, model.solver_state.delta_z, 1., -1. / alpha2)
+  spock_mul!(model, model.state.xi_2, false, model.state.delta_z, 1., -1. / alpha2)
 
-  xi_1 = LA.norm(model.solver_state.xi_1, Inf)
-  xi_2 = LA.norm(model.solver_state.xi_2, Inf)
+  xi_1 = LA.norm(model.state.xi_1, Inf)
+  xi_2 = LA.norm(model.state.xi_2, Inf)
 
   res = false
 
   if verbose === LOG
-    copyto!(model.solver_state.xi, model.solver_state.xi_1)
-    spock_mul!(model, model.solver_state.xi, true, model.solver_state.xi_2, 1., 1.)
+    copyto!(model.state.xi, model.state.xi_1)
+    spock_mul!(model, model.state.xi, true, model.state.xi_2, 1., 1.)
 
-    xi = LA.norm(model.solver_state.xi, Inf)
+    xi = LA.norm(model.state.xi, Inf)
 
     open("examples/output/xi_cp.dat", "a") do io
       writedlm(io, xi)
@@ -99,11 +99,11 @@ function should_terminate!(
       res = true
     end
   # Only check third condition when first two have succeeded (avoid extra L' if possible)
-  elseif xi_1 <= max(tol * model.solver_state.res_0[1], tol) && xi_2 <= max(tol * model.solver_state.res_0[2], tol)
-    # copyto!(model.solver_state.xi, model.solver_state.xi_1)
-    # spock_mul!(model, model.solver_state.xi, true, model.solver_state.xi_2, 1., 1.)
+  elseif xi_1 <= max(tol * model.state.res_0[1], tol) && xi_2 <= max(tol * model.state.res_0[2], tol)
+    # copyto!(model.state.xi, model.state.xi_1)
+    # spock_mul!(model, model.state.xi, true, model.state.xi_2, 1., 1.)
 
-    # xi = LA.norm(model.solver_state.xi, Inf)
+    # xi = LA.norm(model.state.xi, Inf)
 
     # if xi <= tol
     #   return true
@@ -111,11 +111,11 @@ function should_terminate!(
     res = true
   end
 
-  if model.solver_state.res_0[1] === -Inf
-    model.solver_state.res_0[1] = xi_1
+  if model.state.res_0[1] === -Inf
+    model.state.res_0[1] = xi_1
   end
-  if model.solver_state.res_0[2] === -Inf
-    model.solver_state.res_0[2] = xi_2
+  if model.state.res_0[2] === -Inf
+    model.state.res_0[2] = xi_2
   end
 
   return res
@@ -130,29 +130,29 @@ end
 #   verbose :: VERBOSE_LEVEL
 # ) where {TF <: Real}
 
-#   for i = 1:model.solver_state.nz
-#     model.solver_state.delta_z[i] = model.solver_state.z[i] - model.solver_state.z_old[i]
+#   for i = 1:model.state.nz
+#     model.state.delta_z[i] = model.state.z[i] - model.state.z_old[i]
 #   end
-#   for i = 1:model.solver_state.nv
-#     model.solver_state.delta_v[i] = model.solver_state.v[i] - model.solver_state.v_old[i]
+#   for i = 1:model.state.nv
+#     model.state.delta_v[i] = model.state.v[i] - model.state.v_old[i]
 #   end
 
-#   copyto!(model.solver_state.xi_1, model.solver_state.delta_z)
-#   copyto!(model.solver_state.xi_2, model.solver_state.delta_v)
+#   copyto!(model.state.xi_1, model.state.delta_z)
+#   copyto!(model.state.xi_2, model.state.delta_v)
 
 #   # xi_1 <- -1/alpha2 xi_1 + L' * delta_v
-#   spock_mul!(model, model.solver_state.xi_1, true, model.solver_state.delta_v, 1., -1. / alpha1)
+#   spock_mul!(model, model.state.xi_1, true, model.state.delta_v, 1., -1. / alpha1)
 #   # xi_2 <- -1/alpha2 xi_2 + L * delta_z
-#   spock_mul!(model, model.solver_state.xi_2, false, model.solver_state.delta_z, 1., -1. / alpha2)
+#   spock_mul!(model, model.state.xi_2, false, model.state.delta_z, 1., -1. / alpha2)
 
-#   xi_1 = LA.norm(model.solver_state.xi_1, Inf)
-#   xi_2 = LA.norm(model.solver_state.xi_2, Inf)
+#   xi_1 = LA.norm(model.state.xi_1, Inf)
+#   xi_2 = LA.norm(model.state.xi_2, Inf)
 
 #   if verbose === LOG
-#     copyto!(model.solver_state.xi, model.solver_state.xi_1)
-#     spock_mul!(model, model.solver_state.xi, true, model.solver_state.xi_2, 1., 1.)
+#     copyto!(model.state.xi, model.state.xi_1)
+#     spock_mul!(model, model.state.xi, true, model.state.xi_2, 1., 1.)
 
-#     xi = LA.norm(model.solver_state.xi, Inf)
+#     xi = LA.norm(model.state.xi, Inf)
 
 #     open("examples/output/xi_cp.dat", "a") do io
 #       writedlm(io, xi)
@@ -169,10 +169,10 @@ end
 #     end
 #   # Only check third condition when first two have succeeded (avoid extra L' if possible)
 #   elseif xi_1 <= tol && xi_2 <= tol
-#     copyto!(model.solver_state.xi, model.solver_state.xi_1)
-#     spock_mul!(model, model.solver_state.xi, true, model.solver_state.xi_2, 1., 1.)
+#     copyto!(model.state.xi, model.state.xi_1)
+#     spock_mul!(model, model.state.xi, true, model.state.xi_2, 1., 1.)
 
-#     xi = LA.norm(model.solver_state.xi, Inf)
+#     xi = LA.norm(model.state.xi, Inf)
 
 #     if xi <= tol
 #       return true
@@ -196,7 +196,7 @@ function run_cp!(
 )
 
   if sigma === nothing || gamma === nothing
-    sigma = 0.99 / sqrt(model.solver_state.L_norm)
+    sigma = 0.99 / sqrt(model.state.L_norm)
     gamma = sigma
   end
 
@@ -204,8 +204,8 @@ function run_cp!(
 
   while iter < MAX_ITER_COUNT
     # Update the z / v -old variables
-    copyto!(model.solver_state.z_old, model.solver_state.z)
-    copyto!(model.solver_state.v_old, model.solver_state.v)
+    copyto!(model.state.z_old, model.state.z)
+    copyto!(model.state.v_old, model.state.v)
 
     update_zbar!(model, gamma)
     update_vbar!(model, sigma)

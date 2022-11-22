@@ -6,37 +6,37 @@ function anderson!(
   ANDERSON_BUFFER_SIZE = 3
   gamma = model.solver_state_internal.aa_gamma
 
-  # model.solver_state_internal.MP[1:model.solver_state.nz + model.solver_state.nv, 1 : ANDERSON_BUFFER_SIZE] = circshift(model.solver_state_internal.MP, (0, 1))
-  # model.solver_state_internal.MR[1:model.solver_state.nz + model.solver_state.nv, 1 : ANDERSON_BUFFER_SIZE] = circshift(model.solver_state_internal.MR, (0, 1))
+  # model.solver_state_internal.MP[1:model.state.nz + model.state.nv, 1 : ANDERSON_BUFFER_SIZE] = circshift(model.solver_state_internal.MP, (0, 1))
+  # model.solver_state_internal.MR[1:model.state.nz + model.state.nv, 1 : ANDERSON_BUFFER_SIZE] = circshift(model.solver_state_internal.MR, (0, 1))
 
 
-  n_rows = model.solver_state.nz + model.solver_state.nv
+  n_rows = model.state.nz + model.state.nv
   for j = ANDERSON_BUFFER_SIZE - 1 : -1 : 1
     for i = 1:n_rows
       model.solver_state_internal.MP[i, j + 1] = model.solver_state_internal.MP[i, j]
     end
   end
-  n_rows = model.solver_state.nz + model.solver_state.nv
+  n_rows = model.state.nz + model.state.nv
   for j = ANDERSON_BUFFER_SIZE - 1 : -1 : 1
     for i = 1:n_rows
       model.solver_state_internal.MR[i, j + 1] = model.solver_state_internal.MR[i, j]
     end
   end
   
-  for i = 1:model.solver_state.nz
-    model.solver_state_internal.MR[i, 1] = model.solver_state.delta_rz[i]
-    model.solver_state_internal.MP[i, 1] = model.solver_state.delta_z[i] - model.solver_state_internal.MR[i, 1]
+  for i = 1:model.state.nz
+    model.solver_state_internal.MR[i, 1] = model.state.delta_rz[i]
+    model.solver_state_internal.MP[i, 1] = model.state.delta_z[i] - model.solver_state_internal.MR[i, 1]
   end 
-  for i = 1:model.solver_state.nv
-    model.solver_state_internal.MR[model.solver_state.nz + i, 1] = model.solver_state.delta_rv[i]
-    model.solver_state_internal.MP[model.solver_state.nz + i, 1] = model.solver_state.delta_v[i] - model.solver_state_internal.MR[model.solver_state.nz + i, 1]
+  for i = 1:model.state.nv
+    model.solver_state_internal.MR[model.state.nz + i, 1] = model.state.delta_rv[i]
+    model.solver_state_internal.MP[model.state.nz + i, 1] = model.state.delta_v[i] - model.solver_state_internal.MR[model.state.nz + i, 1]
   end
 
-  for i = 1:model.solver_state.nz
-    model.solver_state_internal.aa_wsp[i] = model.solver_state.rz[i]
+  for i = 1:model.state.nz
+    model.solver_state_internal.aa_wsp[i] = model.state.rz[i]
   end
-  for i = 1:model.solver_state.nv
-    model.solver_state_internal.aa_wsp[model.solver_state.nz + i] = model.solver_state.rv[i]
+  for i = 1:model.state.nv
+    model.solver_state_internal.aa_wsp[model.state.nz + i] = model.state.rv[i]
   end
 
   ##### QR update to solve least squares problem
@@ -114,11 +114,11 @@ function anderson!(
 
   # gamma = model.solver_state_internal.MP * gamma
   LA.mul!(model.solver_state_internal.aa_wsp, model.solver_state_internal.MP, gamma)
-  for i = 1:model.solver_state.nz
-    model.solver_state_internal.dz[i] = -model.solver_state.rz[i] - model.solver_state_internal.aa_wsp[i]
+  for i = 1:model.state.nz
+    model.solver_state_internal.dz[i] = -model.state.rz[i] - model.solver_state_internal.aa_wsp[i]
   end
-  for i = 1:model.solver_state.nv
-    model.solver_state_internal.dv[i] = -model.solver_state.rv[i] - model.solver_state_internal.aa_wsp[model.solver_state.nz + i]
+  for i = 1:model.state.nv
+    model.solver_state_internal.dv[i] = -model.state.rv[i] - model.solver_state_internal.aa_wsp[model.state.nz + i]
   end
 end
 

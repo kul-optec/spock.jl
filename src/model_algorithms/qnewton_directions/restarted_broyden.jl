@@ -8,8 +8,8 @@ function restarted_broyden!(
   MAX_K = 20
   theta_bar = 0.5
 
-  nz = model.solver_state.nz
-  nv = model.solver_state.nv
+  nz = model.state.nz
+  nv = model.state.nv
 
   # (Psz, Psv) = (L' * sv, L * sz)
   L!(model, model.solver_state_internal.sz, model.solver_state_internal.Psv)
@@ -24,10 +24,10 @@ function restarted_broyden!(
 
   # d = -rx
   for k = 1:nz
-    model.solver_state_internal.dz[k] = - model.solver_state.rz[k]
+    model.solver_state_internal.dz[k] = - model.state.rz[k]
   end
   for k = 1:nv
-    model.solver_state_internal.dv[k] = - model.solver_state.rv[k]
+    model.solver_state_internal.dv[k] = - model.state.rv[k]
   end
   
   # stilde = y

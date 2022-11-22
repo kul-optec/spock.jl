@@ -50,11 +50,11 @@ constraints = UniformRectangle(
 cp_model = build_model(scen_tree, cost, dynamics, rms, constraints, SolverOptions(CP, nothing))
 solve_model!(cp_model, [0.1, .1])
 
-x = cp_model.solver_state.z[1 : 14]
-u = cp_model.solver_state.z[15: 17]
-s = cp_model.solver_state.z[18:24]
-tau = cp_model.solver_state.z[25:30]
-y = cp_model.solver_state.z[31:45]
+x = cp_model.state.z[1 : 14]
+u = cp_model.state.z[15: 17]
+s = cp_model.state.z[18:24]
+tau = cp_model.state.z[25:30]
+y = cp_model.state.z[31:45]
 
 @testset "The solution satisfies the dynamics exactly" begin
   @test isapprox(x[3:4], dynamics.A[1] * x[1:2] + dynamics.B[1] * u[1])

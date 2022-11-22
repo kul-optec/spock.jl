@@ -52,7 +52,7 @@ solve_model!(cp_model, [0.1, .1])
 
 @testset "prox_f is firmly nonexpansive" begin
   for _ = 1:10
-    nz = cp_model.solver_state.nz
+    nz = cp_model.state.nz
     prox1 = rand(nz); z1 = copy(prox1)
     prox2 = rand(nz); z2 = copy(prox2)
     gamma = 0.1
@@ -68,7 +68,7 @@ end
 
 @testset "prox_{g^*} is firmly nonexpansive" begin
   for _ = 1:20
-    nv = cp_model.solver_state.nv
+    nv = cp_model.state.nv
     prox1 = rand(nv); v1 = copy(prox1)
     prox2 = rand(nv); v2 = copy(prox2)
     gamma = 0.1

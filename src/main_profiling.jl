@@ -79,3 +79,7 @@ factor = 1e0
 cp_model = spock.build_model(scen_tree, cost, dynamics, rms, constraints, spock.SolverOptions(spock.SP, nothing))
 # @profview spock.solve_model!(cp_model, [0.1, .1], tol=1e-3)
 @time spock.solve_model!(cp_model, [0.1, .1] / factor, tol=1e-3 / factor)
+
+cp_model = spock.build_model(scen_tree, cost, dynamics, rms, constraints, spock.SolverOptions(spock.CP, nothing))
+# @profview spock.solve_model!(cp_model, [0.1, .1], tol=1e-3)
+@time spock.solve_model!(cp_model, [0.1, .1] / factor, tol=1e-3 / factor)

@@ -15,7 +15,7 @@ function build_spock(
   # x0
   x0 = zeros(nx)
 
-  problem_definition = GENERIC_PROBLEM_DEFINITION(
+  problem = GENERIC_PROBLEM_DEFINITION(
     x0,
     nx,
     nu,
@@ -29,11 +29,11 @@ function build_spock(
   ### Solver state
 
   # z
-  nz = get_nz(problem_definition)
+  nz = get_nz(problem)
   z = zeros(nz); zbar = zeros(nz)
 
   # L
-  nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_7, nv_11, nv_12, nv_13, nv_14 = get_nv(problem_definition)
+  nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_7, nv_11, nv_12, nv_13, nv_14 = get_nv(problem)
   nv = sum([nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_7, nv_11, nv_12, nv_13, nv_14])
 
   v5_inds = collect(sum([nv_1, nv_2, nv_3, nv_4]) + 1 : sum([nv_1, nv_2, nv_3, nv_4, nv_5]))
@@ -49,7 +49,7 @@ function build_spock(
   n_leafs = scen_tree.n_leaf_nodes
   n = scen_tree.n
 
-  v2_offset = length(z_to_y(problem_definition))
+  v2_offset = length(z_to_y(problem))
   v3_offset = v2_offset + n_non_leafs
   v4_offset = v3_offset + nx * (n - 1)
   v5_offset = v4_offset + nu * (n - 1)
@@ -66,7 +66,7 @@ function build_spock(
   # v
   v = zeros(nv); vbar = zeros(nv)
 
-  P, K, R_chol, ABK = ricatti_offline(problem_definition)
+  P, K, R_chol, ABK = ricatti_offline(problem)
 
   ### Kernel projection
   Ms = [
@@ -108,18 +108,18 @@ function build_spock(
   ANDERSON_BUFFER_SIZE = 3
 
   # TODO: Support more general cases
-  ny = length(problem_definition.rms[1].b)
-  n_children = length(problem_definition.dynamics.A)
+  ny = length(problem.rms[1].b)
+  n_children = length(problem.dynamics.A)
 
   solver_state_internal = SP_IMPLICITL_STATE_INTERNAL(
     zeros(nx),
     zeros(nx),
     zeros(nu),
-    z_to_x(problem_definition),
-    z_to_u(problem_definition),
-    z_to_s(problem_definition),
-    z_to_tau(problem_definition),
-    z_to_y(problem_definition),
+    z_to_x(problem),
+    z_to_u(problem),
+    z_to_s(problem),
+    z_to_tau(problem),
+    z_to_y(problem),
     map(x -> sqrt(x), cost.Q),
     map(x -> sqrt(x), cost.R),
     map(x -> sqrt(x), cost.QN),
@@ -204,7 +204,7 @@ function build_spock(
   return SPOCK(
     solver_state,
     solver_state_internal,
-    problem_definition
+    problem
   )
 
 end
@@ -240,12 +240,12 @@ function solve_model!(
 ) where {TF <: Real}
 
   if z0 !== nothing || v0 !== nothing
-    copyto!(model.solver_state.z, z0)
-    copyto!(model.solver_state.v, v0)
+    copyto!(model.state.z, z0)
+    copyto!(model.state.v, v0)
   end
 
-  copyto!(model.problem_definition.x0, x0)
-  copyto!(model.solver_state.res_0, [-Inf, -Inf])
+  copyto!(model.problem.x0, x0)
+  copyto!(model.state.res_0, [-Inf, -Inf])
 
   run_sp!(model, tol=tol, verbose=verbose, sigma = sigma, gamma = gamma)
 end
