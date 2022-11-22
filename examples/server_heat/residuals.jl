@@ -22,13 +22,13 @@ spock.writedlm("examples/output/xi_sp.dat", "")
 spock.writedlm("examples/output/xi1_sp.dat", "")
 spock.writedlm("examples/output/xi2_sp.dat", "")
 spock.writedlm("examples/output/xi_backtrack_count.dat", "")
-sp_model = spock.build_model(scen_tree, cost, dynamics, rms, constraints, spock.SolverOptions(spock.L_IMPLICIT, spock.SP))
+sp_model = spock.build_model(scen_tree, cost, dynamics, rms, constraints, spock.SolverOptions(spock.SP, nothing))
 spock.solve_model!(sp_model, x0, tol=TOL, verbose=spock.LOG)
 
 spock.writedlm("examples/output/xi_cp.dat", "")
 spock.writedlm("examples/output/xi1_cp.dat", "")
 spock.writedlm("examples/output/xi2_cp.dat", "")
-cp_model = spock.build_model(scen_tree, cost, dynamics, rms, constraints, spock.SolverOptions(spock.L_IMPLICIT, spock.CP))
+cp_model = spock.build_model(scen_tree, cost, dynamics, rms, constraints, spock.SolverOptions(spock.CP, nothing))
 spock.solve_model!(cp_model, x0, tol=TOL, verbose=spock.LOG)
 
 fig = plot(

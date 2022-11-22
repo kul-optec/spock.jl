@@ -58,19 +58,19 @@ end
 Supported options to construct various solvers
 """
 
-@enum DynamicsOptions begin
-  DYNAMICSL = 1
-  L_IMPLICIT = 2
-end
-
 @enum AlgorithmOptions begin
   CP = 1 # Plain Chambolle-Pock
   SP = 2 # Chambolle-Pock + SuperMann
 end
 
+@enum QNewtonOptions begin
+  AA = 1 # Anderson Acceleration
+  RB = 2 # Restarted Broyden
+end
+
 struct SolverOptions
-  dynamics :: DynamicsOptions
   algorithm :: AlgorithmOptions
+  qnewton :: Union{QNewtonOptions, Nothing}
 end
 
 ########
@@ -262,7 +262,7 @@ function build_model(
   dynamics :: Dynamics, 
   rms :: Union{Vector{RiskMeasure}, Vector{RiskMeasureV2}},
   constraints :: AbstractConvexConstraints,
-  solver_options :: SolverOptions = SolverOptions(DYNAMICSL, CP)
+  solver_options :: SolverOptions = SolverOptions(CP, nothing)
 )
 """
 Supported combinations of solver options:
@@ -272,18 +272,10 @@ Supported combinations of solver options:
 - CP + Implicit L
 """
 
-if solver_options.dynamics == DYNAMICSL
-  if solver_options.algorithm == CP
-    return build_model_cp_dynamicsl(scen_tree, cost, dynamics, rms)
-  elseif solver_options.algorithm == SP
-    return build_model_sp_dynamicsl(scen_tree, cost, dynamics, rms)
-  end
-elseif solver_options.dynamics == L_IMPLICIT
-  if solver_options.algorithm == CP
-    return build_model_cp_implicitl(scen_tree, cost, dynamics, rms, constraints)
-  elseif solver_options.algorithm == SP
-    return build_model_sp_implicitl(scen_tree, cost, dynamics, rms, constraints)
-  end
+if solver_options.algorithm == CP
+  return build_model_cp_implicitl(scen_tree, cost, dynamics, rms, constraints)
+elseif solver_options.algorithm == SP
+  return build_model_sp_implicitl(scen_tree, cost, dynamics, rms, constraints, solver_options.qnewton)
 end
 
 error("This combination of solver options is not supported.")

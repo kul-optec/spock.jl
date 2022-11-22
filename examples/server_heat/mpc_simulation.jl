@@ -37,7 +37,7 @@ cosmo_timings = zeros(MPC_N, M)
 
 for m = 1:M
 
-model = spock.build_model(scen_tree, cost, dynamics, rms, constraints, spock.SolverOptions(spock.L_IMPLICIT, spock.SP))
+model = spock.build_model(scen_tree, cost, dynamics, rms, constraints, spock.SolverOptions(spock.SP, nothing))
 x0 = [i <= 2 ? .1 : .1 for i = 1:nx]
 x0_mosek = copy(x0)
 x0_gurobi = copy(x0)

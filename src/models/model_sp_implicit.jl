@@ -3,7 +3,8 @@ function build_model_sp_implicitl(
   cost :: CostV2, 
   dynamics :: Dynamics, 
   rms :: Vector{RiskMeasureV2},
-  constraints :: AbstractConvexConstraints
+  constraints :: AbstractConvexConstraints,
+  qnewton :: Union{QNewtonOptions, Nothing},
 )
 
   ### Problem definition

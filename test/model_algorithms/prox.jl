@@ -47,7 +47,7 @@ constraints = UniformRectangle(
   scen_tree.n_non_leaf_nodes
 )
 
-cp_model = build_model(scen_tree, cost, dynamics, rms, constraints, SolverOptions(L_IMPLICIT, CP))
+cp_model = build_model(scen_tree, cost, dynamics, rms, constraints, SolverOptions(CP, nothing))
 solve_model!(cp_model, [0.1, .1])
 
 @testset "prox_f is firmly nonexpansive" begin
