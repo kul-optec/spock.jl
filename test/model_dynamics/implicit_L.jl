@@ -33,7 +33,21 @@ dynamics = Dynamics(A, B)
 p_ref = [0.3, 0.7]; alpha=0.95
 rms = get_uniform_rms_avar_v2(p_ref, alpha, d, N);
 
-cp_model = build_model(scen_tree, cost, dynamics, rms, SolverOptions(L_IMPLICIT, CP))
+# Box constraints
+constraints = UniformRectangle(
+  -1.,
+  1.,
+  -1.,
+  1.,
+  scen_tree.n_leaf_nodes * nx,
+  scen_tree.n_non_leaf_nodes * (nx + nu),
+  nx,
+  nu,
+  scen_tree.n_leaf_nodes,
+  scen_tree.n_non_leaf_nodes
+);
+
+cp_model = build_model(scen_tree, cost, dynamics, rms, constraints, SolverOptions(L_IMPLICIT, CP))
 solve_model!(cp_model, [0.1, .1])
 
 x = cp_model.solver_state.z[1 : 14]

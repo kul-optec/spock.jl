@@ -21,12 +21,6 @@ The above variables are defined for:
     - w: non-root nodes
     - s: non-leaf nodes for risk measures values, leaf nodes for cost values of corresponding scenario
 """
-struct ScenarioTreeNodeInfoV1{TI <: Integer}
-    x :: Union{Vector{TI}, Nothing}
-    u :: Union{Vector{TI}, Nothing}
-    w :: Union{TI, Nothing}
-    s :: Union{TI, Nothing}
-end
 
 struct ScenarioTreeNodeInfoV2{TI <: Integer}
   x :: Union{Vector{TI}, Nothing}
@@ -46,18 +40,6 @@ Struct that represents a scenario tree.
     - n: Total number of nodes in this scenario tree
     - min_index_per_timestep: array containing, for each time step, the index of the first node
 """
-struct ScenarioTreeV1{TI <: Integer} <: ScenarioTree
-    child_mapping :: Dict{TI, Vector{TI}}
-    anc_mapping :: Dict{TI, TI}
-    node_info :: Vector{ScenarioTreeNodeInfoV1{TI}}
-    N :: TI
-    n :: TI
-    n_non_leaf_nodes :: TI
-    n_leaf_nodes :: TI
-    leaf_node_min_index :: TI
-    leaf_node_max_index :: TI
-    min_index_per_timestep :: Vector{TI}
-end
 
 struct ScenarioTreeV2{TI <: Integer} <: ScenarioTree
   child_mapping :: Dict{TI, Vector{TI}}
@@ -75,59 +57,6 @@ end
 ##########################
 ### Exposed utility functions
 ##########################
-
-function generate_scenario_tree_uniform_branching_factor(N :: TI, d :: TI, nx :: TI, nu :: TI) where {TI <: Integer}
-  if d <= 1
-      error("Branching factor d must be larger than 1, but is $(d).")
-  end
-  
-  # Total number of nodes in the scenario tree
-  n_total = (d^N - 1) ÷ (d - 1)
-  # Total number of leaf nodes
-  n_leafs = d^(N - 1)
-  # Total number of non-leaf nodes
-  n_non_leafs = (d^(N - 1) - 1) ÷ (d - 1)
-
-  if nu > 1
-    error("Generalise the code below slightly to handle nu > 1")
-  end
-  
-  node_info = [
-      ScenarioTreeNodeInfoV1(
-          collect((i - 1) * nx + 1 : i * nx),
-          i <= n_non_leafs ? [i] : nothing, # todo: write slightly more genereal for nu > 1 (similar to the line above)
-          i > 1 ? (i % d) + 1 : nothing,
-          i,
-      ) for i in collect(1:n_total)
-  ]
-
-  child_mapping = Dict{TI, Vector{TI}}()
-  child_index = 2
-  for i = 1:n_non_leafs
-      child_mapping[i] = collect(child_index : child_index + d - 1)
-      child_index += d
-  end
-
-  anc_mapping = Dict{TI, TI}()
-  for (key, value) in child_mapping
-      for v in value
-          anc_mapping[v] = key
-      end
-  end
-
-  return ScenarioTreeV1(
-      child_mapping,
-      anc_mapping,
-      node_info,
-      N,
-      n_total,
-      n_non_leafs,
-      n_leafs,
-      n_non_leafs + 1,
-      n_total,
-      vcat([1], [1 + (d^(i) - 1)÷(d-1) for i in collect(1:N-1)])
-  )
-end
 
 function generate_scenario_tree_uniform_branching_factor_v2(N :: TI, d :: TI, nx :: TI, nu :: TI) where {TI <: Integer}
   if d <= 1

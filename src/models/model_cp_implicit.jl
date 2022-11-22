@@ -3,7 +3,7 @@ function build_model_cp_implicitl(
   cost :: CostV2, 
   dynamics :: Dynamics, 
   rms :: Vector{RiskMeasureV2},
-  constraints :: ConvexConstraints
+  constraints :: AbstractConvexConstraints
 )
 
   ### Problem definition

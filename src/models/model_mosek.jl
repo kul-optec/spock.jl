@@ -6,29 +6,6 @@ using MosekTools, Ipopt, Gurobi, SCS, SDPT3, SeDuMi, COSMO
 
 #### COST
 
-function get_scenario_cost(model :: Model, problem_definition :: GENERIC_PROBLEM_DEFINITIONV1, node :: Int64)
-  x = model[:x]
-  u = model[:u]
-  # No input for leaf nodes!
-  res = x[node_to_x(problem_definition, node)]' * cost.Q[node] * x[node_to_x(problem_definition, node)]
-
-  while node != 1
-      node = scen_tree.anc_mapping[node]
-      res += (x[node_to_x(problem_definition, node)]' * cost.Q[node] * x[node_to_x(problem_definition, node)] 
-          + [u[node_to_u(problem_definition, node)]]' * cost.R[node] * [u[node_to_u(problem_definition, node)]])
-  end
-
-  return res 
-end
-
-function impose_cost(model :: Model, problem_definition :: GENERIC_PROBLEM_DEFINITIONV1)
-  @constraint(
-      model,
-      cost[i= problem_definition.scen_tree.leaf_node_min_index : problem_definition.scen_tree.leaf_node_max_index],
-      get_scenario_cost(model, problem_definition, i) <= model[:s][problem_definition.scen_tree.node_info[i].s]
-  )
-end
-
 function impose_cost(model :: Model, problem_definition :: GENERIC_PROBLEM_DEFINITIONV2)
   anc_mapping = problem_definition.scen_tree.anc_mapping
   x = model[:x]
@@ -50,21 +27,6 @@ function impose_cost(model :: Model, problem_definition :: GENERIC_PROBLEM_DEFIN
 end
 
 #### Dynamics
-
-function impose_dynamics(model :: Model, problem_definition :: GENERIC_PROBLEM_DEFINITIONV1)
-  x = model[:x]
-  u = model[:u]
-
-  @constraint(
-      model,
-      dynamics[i=2:problem_definition.scen_tree.n], # Non-root nodes, so all except i = 1
-      x[
-          node_to_x(problem_definition, i)
-      ] .== 
-          problem_definition.dynamics.A[problem_definition.scen_tree.node_info[i].w] * x[node_to_x(problem_definition, problem_definition.scen_tree.anc_mapping[i])]
-          + problem_definition.dynamics.B[problem_definition.scen_tree.node_info[i].w] * u[node_to_u(problem_definition, problem_definition.scen_tree.anc_mapping[i])]
-  )
-end
 
 function impose_dynamics(model :: Model, problem_definition :: GENERIC_PROBLEM_DEFINITIONV2)
   x = model[:x]
@@ -120,31 +82,6 @@ end
 
 #### Risk constraints
 
-function add_risk_epi_constraint(model::Model, r::RiskMeasureV1, x_current, x_next::Vector, y)
-  # 2b
-  @constraint(model, in(-(r.A' * x_next + r.B' * y) , r.C.subcones[1]))
-  # 2c
-  @constraint(model, in(-y, r.D.subcones[1]))
-  # 2d
-  @constraint(model, - r.b' * y <= x_current)
-end
-
-function add_risk_epi_constraints(model::Model, problem_definition :: GENERIC_PROBLEM_DEFINITIONV1)
-  # TODO: Generalize for non-uniform risk measures
-  n_y = length(problem_definition.rms[1].b)
-  @variable(model, y[i=1:problem_definition.scen_tree.n_non_leaf_nodes * n_y])
-  
-  for i = 1:problem_definition.scen_tree.n_non_leaf_nodes
-      add_risk_epi_constraint(
-          model,
-          problem_definition.rms[i],
-          model[:s][i],
-          model[:s][problem_definition.scen_tree.child_mapping[i]],
-          y[(i - 1) * n_y + 1 : n_y * i]
-      )
-  end
-end
-
 function add_risk_epi_constraints(model::Model, problem_definition :: GENERIC_PROBLEM_DEFINITIONV2)
   ny = 0
   for i = 1:length(problem_definition.rms)
@@ -191,54 +128,6 @@ function add_risk_epi_constraints(model::Model, problem_definition :: GENERIC_PR
 
     y_offset += length(problem_definition.rms[i].b)
   end
-end
-
-function build_model_mosek(
-  scen_tree :: ScenarioTreeV1, 
-  cost :: CostV1, 
-  dynamics :: Dynamics, 
-  rms :: Vector{RiskMeasureV1},
-)
-
-  ### Problem definition
-
-  # nx, nu
-  nx, nu = size(dynamics.B[1])
-
-  # x0
-  x0 = zeros(nx)
-
-  problem_definition = GENERIC_PROBLEM_DEFINITIONV1(
-    x0,
-    nx,
-    nu,
-    scen_tree,
-    rms,
-    cost,
-    dynamics,
-  )
-
-  # Define model, primal variables, epigraph variables and objective
-  model = Model(Mosek.Optimizer)
-  set_silent(model)
-
-  @variable(model, x[i=1:scen_tree.n * problem_definition.nx])
-  @variable(model, u[i=1:scen_tree.n_non_leaf_nodes * problem_definition.nu])
-  @variable(model, s[i=1:scen_tree.n * 1])
-
-  @objective(model, Min, s[1])
-
-  # # Impose cost
-  impose_cost(model, problem_definition)
-
-  # # Impose dynamics
-  impose_dynamics(model, problem_definition)
-
-  # # Impose risk measure epigraph constraints
-  add_risk_epi_constraints(model, problem_definition)
-
-  return model
-
 end
 
 function build_model_mosek(

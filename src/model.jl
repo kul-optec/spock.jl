@@ -43,16 +43,6 @@ struct GENERIC_SOLVER_STATE{TF, TI} <: SOLVER_STATE
   res_0 :: Vector{TF}
 end
 
-struct GENERIC_PROBLEM_DEFINITIONV1{TF <: Real, TI <: Integer} <: PROBLEM_DEFINITION
-  x0 :: Vector{TF}
-  nx :: TI
-  nu :: TI
-  scen_tree :: ScenarioTreeV1{TI}
-  rms :: Vector{RiskMeasureV1}
-  cost:: Cost
-  dynamics :: Dynamics{TF}
-end
-
 struct GENERIC_PROBLEM_DEFINITIONV2{TF <: Real, TI <: Integer} <: PROBLEM_DEFINITION
   x0 :: Vector{TF}
   nx :: TI
@@ -81,81 +71,6 @@ end
 struct SolverOptions
   dynamics :: DynamicsOptions
   algorithm :: AlgorithmOptions
-end
-
-##########
-# CP Model with the dynamics in L
-##########
-struct CP_DYNAMICSL_STATE_INTERNAL{TM, TI, TF} <: SOLVER_STATE_INTERNAL
-  L :: TM
-  x_inds :: Vector{TI}
-  u_inds :: Vector{TI}
-  s_inds :: Vector{TI}
-  y_inds :: Vector{TI}
-  v_projection_arg :: AbstractArray{TF, 1}
-  inds_L_risk_a :: Vector{Union{UnitRange{TI}, TI}}
-  inds_L_risk_b :: Vector{Union{UnitRange{TI}, TI}}
-  inds_L_risk_c :: Vector{Union{UnitRange{TI}, TI}}
-  inds_L_cost :: Vector{Union{UnitRange{TI}, TI}}
-  inds_L_dynamics :: UnitRange{TI}
-  v_bisection_workspace :: AbstractArray{TF, 1}
-end
-
-struct MODEL_CP_DYNAMICSL{TM, TI, TF} <: CUSTOM_SOLVER_MODEL
-  solver_state :: GENERIC_SOLVER_STATE{TF, TI}
-  solver_state_internal :: CP_DYNAMICSL_STATE_INTERNAL{TM, TI, TF}
-  problem_definition :: GENERIC_PROBLEM_DEFINITIONV1{TF, TI}
-end
-
-##########
-# SP Model with the dynamics in L
-##########
-struct SP_DYNAMICSL_STATE_INTERNAL{TM, TI, TF} <: SOLVER_STATE_INTERNAL
-  L :: TM
-  x_inds :: Vector{TI}
-  u_inds :: Vector{TI}
-  s_inds :: Vector{TI}
-  y_inds :: Vector{TI}
-  v_projection_arg :: AbstractArray{TF, 1}
-  inds_L_risk_a :: Vector{Union{UnitRange{TI}, TI}}
-  inds_L_risk_b :: Vector{Union{UnitRange{TI}, TI}}
-  inds_L_risk_c :: Vector{Union{UnitRange{TI}, TI}}
-  inds_L_cost :: Vector{Union{UnitRange{TI}, TI}}
-  inds_L_dynamics :: UnitRange{TI}
-  v_bisection_workspace :: AbstractArray{TF, 1}
-  # For SuperMann
-  dz :: AbstractArray{TF, 1}
-  dv :: AbstractArray{TF, 1}
-  w :: AbstractArray{TF, 1}
-  u :: AbstractArray{TF, 1}
-  wbar :: AbstractArray{TF, 1}
-  ubar :: AbstractArray{TF, 1}
-  rw :: AbstractArray{TF, 1}
-  ru :: AbstractArray{TF, 1}
-  w_workspace :: AbstractArray{TF, 1}
-  # Restarted Broyden
-  sz :: AbstractArray{TF, 1}
-  sv :: AbstractArray{TF, 1}
-  stildez :: AbstractArray{TF, 1}
-  stildev :: AbstractArray{TF, 1}
-  yz :: AbstractArray{TF, 1}
-  yv :: AbstractArray{TF, 1}
-  Psz :: AbstractArray{TF, 1}
-  Psv :: AbstractArray{TF, 1}
-  Sz_buf :: AbstractArray{TF, 1}
-  Sv_buf :: AbstractArray{TF, 1}
-  Stildez_buf :: AbstractArray{TF, 1}
-  Stildev_buf :: AbstractArray{TF, 1}
-  Psz_buf :: AbstractArray{TF, 1}
-  Psv_buf :: AbstractArray{TF, 1}
-  rz_old :: AbstractArray{TF, 1}
-  rv_old :: AbstractArray{TF, 1}
-end
-
-struct MODEL_SP_DYNAMICSL{TM, TI, TF} <: CUSTOM_SOLVER_MODEL
-  solver_state :: GENERIC_SOLVER_STATE{TF, TI}
-  solver_state_internal :: SP_DYNAMICSL_STATE_INTERNAL{TM, TI, TF}
-  problem_definition :: GENERIC_PROBLEM_DEFINITIONV1{TF, TI}
 end
 
 ########
@@ -328,17 +243,14 @@ end
 # Model union types
 ##############
 
-# All models with their dynamics in L
-const MODEL_DYNAMICSL = Union{MODEL_CP_DYNAMICSL, MODEL_SP_DYNAMICSL}
-
 # All models with L implicitly constructed
 const MODEL_IMPLICITL = Union{MODEL_CP_IMPLICITL, MODEL_SP_IMPLICITL}
 
 # All models using the plain CP algorithm
-const MODEL_CP = Union{MODEL_CP_DYNAMICSL, MODEL_CP_IMPLICITL}
+const MODEL_CP = Union{MODEL_CP_IMPLICITL}
 
 # All models using the CP + SuperMann algorithm
-const MODEL_SP = Union{MODEL_SP_DYNAMICSL, MODEL_SP_IMPLICITL}
+const MODEL_SP = Union{MODEL_SP_IMPLICITL}
 
 #####################################################
 # Exposed API funcions
@@ -348,8 +260,8 @@ function build_model(
   scen_tree :: ScenarioTree, 
   cost :: Cost, 
   dynamics :: Dynamics, 
-  rms :: Union{Vector{RiskMeasureV1}, Vector{RiskMeasureV2}},
-  constraints :: ConvexConstraints,
+  rms :: Union{Vector{RiskMeasure}, Vector{RiskMeasureV2}},
+  constraints :: AbstractConvexConstraints,
   solver_options :: SolverOptions = SolverOptions(DYNAMICSL, CP)
 )
 """
