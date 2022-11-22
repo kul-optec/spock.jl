@@ -9,6 +9,10 @@ This solver handles risk-averse optimal control problems with:
   - Conic risk measures
   - Convex input-state constraints
 
+## Documentation
+
+Documentation can be found [here](https://kul-optec.github.io/spock.jl/).
+
 ## Installation
 
 Make sure to install the dependencies in the `Project.toml` and in your script import
@@ -16,7 +20,6 @@ Make sure to install the dependencies in the `Project.toml` and in your script i
 ```
 include("src/spock.jl")
 ```
-
 
 ## Examples
 

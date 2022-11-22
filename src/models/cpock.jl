@@ -1,91 +1,164 @@
-function build_model_cp_dynamicsl(
-  scen_tree :: ScenarioTreeV1, 
-  cost :: CostV1, 
+function build_cpock(
+  scen_tree :: ScenarioTree, 
+  cost :: Cost, 
   dynamics :: Dynamics, 
-  rms :: Vector{RiskMeasureV1},
+  rms :: Vector{RiskMeasure},
+  constraints :: AbstractConvexConstraints
 )
 
-### Problem definition
+  ### Problem definition
 
-# nx, nu
-nx, nu = size(dynamics.B[1])
+  # nx, nu
+  nx, nu = size(dynamics.B[1])
 
-# x0
-x0 = zeros(nx)
+  # x0
+  x0 = zeros(nx)
 
-problem_definition = GENERIC_PROBLEM_DEFINITIONV1(
-  x0,
-  nx,
-  nu,
-  scen_tree,
-  rms,
-  cost,
-  dynamics,
-)
+  problem_definition = GENERIC_PROBLEM_DEFINITION(
+    x0,
+    nx,
+    nu,
+    scen_tree,
+    rms,
+    cost,
+    dynamics,
+    constraints
+  )
 
-### Solver state
+  ### Solver state
 
-# z
-nz = get_nz(problem_definition)
-z = zeros(nz); zbar = zeros(nz)
+  # z
+  nz = get_nz(problem_definition)
+  z = zeros(nz); zbar = zeros(nz)
 
-# L
-nL = get_nL(problem_definition)
-L = get_L(problem_definition, nz, nL)
+  # L
+  nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_7, nv_11, nv_12, nv_13, nv_14 = get_nv(problem_definition)
+  nv = sum([nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_7, nv_11, nv_12, nv_13, nv_14])
 
-# L norm
-L_norm = maximum(LA.svdvals(collect(L)))^2
+  v5_inds = collect(sum([nv_1, nv_2, nv_3, nv_4]) + 1 : sum([nv_1, nv_2, nv_3, nv_4, nv_5]))
+  v6_inds = collect(sum([nv_1, nv_2, nv_3, nv_4, nv_5]) + 1 : sum([nv_1, nv_2, nv_3, nv_4, nv_5, nv_6]))
+  v12_inds = collect((sum([nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_7, nv_11]) + 1 :
+    sum([nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_7, nv_11, nv_12])))
+  v13_inds = collect((sum([nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_7, nv_11, nv_12]) + 1 :
+    sum([nv_1, nv_2, nv_3, nv_4, nv_5, nv_6, nv_7, nv_11, nv_12, nv_13])))
 
-# v
-nv = size(L)[1]
-v = zeros(nv); vbar = zeros(nv)
 
-solver_state = GENERIC_SOLVER_STATE(
-  nz,
-  nv,
-  L_norm,
-  z,
-  v,
-  zbar,
-  vbar,
-  zeros(nz),
-  zeros(nz),
-  zeros(nv),
-  zeros(nz),
-  zeros(nv),
-  zeros(nz),
-  zeros(nz),
-  zeros(nv),
-  ones(nz),
-  ones(nv),
-  zeros(nz),
-  zeros(nv),
-  [-Inf, -Inf]
-)
+  # Offsets
+  n_non_leafs = scen_tree.n_non_leaf_nodes
+  n_leafs = scen_tree.n_leaf_nodes
+  n = scen_tree.n
 
-### Internal solver state
-inds_L_risk_a, inds_L_risk_b, inds_L_risk_c, inds_L_cost, inds_L_dynamics = get_L_inds(problem_definition, nz, nL)
+  v2_offset = length(z_to_y(problem_definition))
+  v3_offset = v2_offset + n_non_leafs
+  v4_offset = v3_offset + nx * (n - 1)
+  v5_offset = v4_offset + nu * (n - 1)
+  v6_offset = v5_offset + (n - 1)
+  v7_offset = v6_offset + (n - 1)
+  v11_offset = v7_offset + constraints.nΓ_nonleaf
+  v12_offset = v11_offset + n_leafs * nx
+  v13_offset = v12_offset + n_leafs
+  v14_offset = v13_offset + n_leafs
 
-solver_state_internal = CP_DYNAMICSL_STATE_INTERNAL(
-  L,
-  z_to_x(problem_definition),
-  z_to_u(problem_definition),
-  z_to_s(problem_definition),
-  z_to_y(problem_definition),
-  zeros(nv),
-  inds_L_risk_a,
-  inds_L_risk_b,
-  inds_L_risk_c,
-  inds_L_cost,
-  inds_L_dynamics,
-  zeros(nv)
-)
+  # Todo: L norm must be computed efficiently!
+  L_norm = 10.
 
-return MODEL_CP_DYNAMICSL(
-  solver_state,
-  solver_state_internal,
-  problem_definition
-)
+  # v
+  v = zeros(nv); vbar = zeros(nv)
+
+  P, K, R_chol, ABK = ricatti_offline(problem_definition)
+
+  ### Kernel projection
+  Ms = [
+    vcat(
+      hcat(
+        rms[i].E', -LA.I(length(scen_tree.child_mapping[i])), -LA.I(length(scen_tree.child_mapping[i]))
+      ),
+      hcat(
+        rms[i].F', zeros(length(scen_tree.child_mapping[i]), length(scen_tree.child_mapping[i])), zeros(length(scen_tree.child_mapping[i]), length(scen_tree.child_mapping[i]))
+      )
+    )
+    for i in 1:scen_tree.n_non_leaf_nodes
+  ]
+
+  solver_state = GENERIC_SOLVER_STATE(
+    nz,
+    nv,
+    L_norm,
+    z,
+    v,
+    zbar,
+    vbar,
+    zeros(nz),
+    zeros(nz),
+    zeros(nv),
+    zeros(nz),
+    zeros(nv),
+    zeros(nz),
+    zeros(nz),
+    zeros(nv),
+    ones(nz),
+    ones(nv),
+    zeros(nz),
+    zeros(nv),
+    [-Inf, -Inf]
+  )
+
+  # TODO: Support more general cases
+  ny = length(problem_definition.rms[1].b)
+  n_children = length(problem_definition.dynamics.A)
+
+  solver_state_internal = CP_IMPLICITL_STATE_INTERNAL(
+    zeros(nx),
+    zeros(nx),
+    zeros(nu),
+    z_to_x(problem_definition),
+    z_to_u(problem_definition),
+    z_to_s(problem_definition),
+    z_to_tau(problem_definition),
+    z_to_y(problem_definition),
+    map(x -> sqrt(x), cost.Q),
+    map(x -> sqrt(x), cost.R),
+    map(x -> sqrt(x), cost.QN),
+    zeros(nz),
+    zeros(nv),
+    # Ms,
+    map(
+      x -> LA.svd(LA.nullspace(x)).U * LA.pinv(LA.svd(LA.nullspace(x)).U),
+      Ms
+    ),
+    zeros(ny + n_children * 2),
+    zeros(ny + n_children * 2),
+    P,
+    K,
+    R_chol,
+    ABK,
+    zeros(scen_tree.n * nx),
+    zeros(scen_tree.n * nu),
+    zeros(nu),
+    zeros(nv),
+    v5_inds,
+    v6_inds,
+    v12_inds,
+    v13_inds,
+    v2_offset,
+    v3_offset,
+    v4_offset,
+    v5_offset,
+    v6_offset,
+    v7_offset,
+    v11_offset,
+    v12_offset,
+    v13_offset,
+    v14_offset,
+    zeros(nx + 2),
+    zeros(nx + nu + 2)
+  )
+
+  return CPOCK(
+    solver_state,
+    solver_state_internal,
+    problem_definition
+  )
 
 end
 
@@ -94,7 +167,7 @@ end
 ################
 
 function solve_model!(
-  model :: MODEL_CP_DYNAMICSL,
+  model :: CPOCK,
   x0 :: AbstractArray{TF, 1};
   tol :: TF = 1e-3,
   verbose :: VERBOSE_LEVEL = SILENT,

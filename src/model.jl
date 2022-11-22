@@ -18,7 +18,7 @@ abstract type SOLVER_STATE end
 # used to store some specific variables for this model
 abstract type SOLVER_STATE_INTERNAL end
 # Part of the problem definition that remains accessible during the solve step
-abstract type PROBLEM_DEFINITION end
+abstract type ABSTRACT_PROBLEM_DEFINITION end
 
 struct GENERIC_SOLVER_STATE{TF, TI} <: SOLVER_STATE
   nz :: TI
@@ -43,22 +43,12 @@ struct GENERIC_SOLVER_STATE{TF, TI} <: SOLVER_STATE
   res_0 :: Vector{TF}
 end
 
-struct GENERIC_PROBLEM_DEFINITIONV1{TF <: Real, TI <: Integer} <: PROBLEM_DEFINITION
+struct GENERIC_PROBLEM_DEFINITION{TF <: Real, TI <: Integer} <: ABSTRACT_PROBLEM_DEFINITION
   x0 :: Vector{TF}
   nx :: TI
   nu :: TI
-  scen_tree :: ScenarioTreeV1{TI}
-  rms :: Vector{RiskMeasureV1}
-  cost:: Cost
-  dynamics :: Dynamics{TF}
-end
-
-struct GENERIC_PROBLEM_DEFINITIONV2{TF <: Real, TI <: Integer} <: PROBLEM_DEFINITION
-  x0 :: Vector{TF}
-  nx :: TI
-  nu :: TI
-  scen_tree :: ScenarioTreeV2{TI}
-  rms :: Vector{RiskMeasureV2}
+  scen_tree :: ScenarioTree{TI}
+  rms :: Vector{RiskMeasure}
   cost:: Cost
   dynamics :: Dynamics{TF}
   constraints :: UniformRectangle{TF, TI}
@@ -68,94 +58,19 @@ end
 Supported options to construct various solvers
 """
 
-@enum DynamicsOptions begin
-  DYNAMICSL = 1
-  L_IMPLICIT = 2
-end
-
 @enum AlgorithmOptions begin
   CP = 1 # Plain Chambolle-Pock
   SP = 2 # Chambolle-Pock + SuperMann
 end
 
+@enum QNewtonOptions begin
+  AA = 1 # Anderson Acceleration
+  RB = 2 # Restarted Broyden
+end
+
 struct SolverOptions
-  dynamics :: DynamicsOptions
   algorithm :: AlgorithmOptions
-end
-
-##########
-# CP Model with the dynamics in L
-##########
-struct CP_DYNAMICSL_STATE_INTERNAL{TM, TI, TF} <: SOLVER_STATE_INTERNAL
-  L :: TM
-  x_inds :: Vector{TI}
-  u_inds :: Vector{TI}
-  s_inds :: Vector{TI}
-  y_inds :: Vector{TI}
-  v_projection_arg :: AbstractArray{TF, 1}
-  inds_L_risk_a :: Vector{Union{UnitRange{TI}, TI}}
-  inds_L_risk_b :: Vector{Union{UnitRange{TI}, TI}}
-  inds_L_risk_c :: Vector{Union{UnitRange{TI}, TI}}
-  inds_L_cost :: Vector{Union{UnitRange{TI}, TI}}
-  inds_L_dynamics :: UnitRange{TI}
-  v_bisection_workspace :: AbstractArray{TF, 1}
-end
-
-struct MODEL_CP_DYNAMICSL{TM, TI, TF} <: CUSTOM_SOLVER_MODEL
-  solver_state :: GENERIC_SOLVER_STATE{TF, TI}
-  solver_state_internal :: CP_DYNAMICSL_STATE_INTERNAL{TM, TI, TF}
-  problem_definition :: GENERIC_PROBLEM_DEFINITIONV1{TF, TI}
-end
-
-##########
-# SP Model with the dynamics in L
-##########
-struct SP_DYNAMICSL_STATE_INTERNAL{TM, TI, TF} <: SOLVER_STATE_INTERNAL
-  L :: TM
-  x_inds :: Vector{TI}
-  u_inds :: Vector{TI}
-  s_inds :: Vector{TI}
-  y_inds :: Vector{TI}
-  v_projection_arg :: AbstractArray{TF, 1}
-  inds_L_risk_a :: Vector{Union{UnitRange{TI}, TI}}
-  inds_L_risk_b :: Vector{Union{UnitRange{TI}, TI}}
-  inds_L_risk_c :: Vector{Union{UnitRange{TI}, TI}}
-  inds_L_cost :: Vector{Union{UnitRange{TI}, TI}}
-  inds_L_dynamics :: UnitRange{TI}
-  v_bisection_workspace :: AbstractArray{TF, 1}
-  # For SuperMann
-  dz :: AbstractArray{TF, 1}
-  dv :: AbstractArray{TF, 1}
-  w :: AbstractArray{TF, 1}
-  u :: AbstractArray{TF, 1}
-  wbar :: AbstractArray{TF, 1}
-  ubar :: AbstractArray{TF, 1}
-  rw :: AbstractArray{TF, 1}
-  ru :: AbstractArray{TF, 1}
-  w_workspace :: AbstractArray{TF, 1}
-  # Restarted Broyden
-  sz :: AbstractArray{TF, 1}
-  sv :: AbstractArray{TF, 1}
-  stildez :: AbstractArray{TF, 1}
-  stildev :: AbstractArray{TF, 1}
-  yz :: AbstractArray{TF, 1}
-  yv :: AbstractArray{TF, 1}
-  Psz :: AbstractArray{TF, 1}
-  Psv :: AbstractArray{TF, 1}
-  Sz_buf :: AbstractArray{TF, 1}
-  Sv_buf :: AbstractArray{TF, 1}
-  Stildez_buf :: AbstractArray{TF, 1}
-  Stildev_buf :: AbstractArray{TF, 1}
-  Psz_buf :: AbstractArray{TF, 1}
-  Psv_buf :: AbstractArray{TF, 1}
-  rz_old :: AbstractArray{TF, 1}
-  rv_old :: AbstractArray{TF, 1}
-end
-
-struct MODEL_SP_DYNAMICSL{TM, TI, TF} <: CUSTOM_SOLVER_MODEL
-  solver_state :: GENERIC_SOLVER_STATE{TF, TI}
-  solver_state_internal :: SP_DYNAMICSL_STATE_INTERNAL{TM, TI, TF}
-  problem_definition :: GENERIC_PROBLEM_DEFINITIONV1{TF, TI}
+  qnewton :: Union{QNewtonOptions, Nothing}
 end
 
 ########
@@ -209,10 +124,10 @@ struct CP_IMPLICITL_STATE_INTERNAL{TI, TF, TM} <: SOLVER_STATE_INTERNAL
   proj_nleafs_workspace :: Vector{TF}
 end
 
-struct MODEL_CP_IMPLICITL{TI, TF, TM} <: CUSTOM_SOLVER_MODEL
+struct CPOCK{TI, TF, TM} <: CUSTOM_SOLVER_MODEL
   solver_state :: GENERIC_SOLVER_STATE{TF, TI}
   solver_state_internal :: CP_IMPLICITL_STATE_INTERNAL{TI, TF, TM}
-  problem_definition :: GENERIC_PROBLEM_DEFINITIONV2{TF, TI}
+  problem_definition :: GENERIC_PROBLEM_DEFINITION{TF, TI}
 end
 
 ########
@@ -310,11 +225,25 @@ struct SP_IMPLICITL_STATE_INTERNAL{TI, TF, TM} <: SOLVER_STATE_INTERNAL
   aa_gamma :: Vector{TF}
 end
 
-struct MODEL_SP_IMPLICITL{TI, TF, TM} <: CUSTOM_SOLVER_MODEL
+struct SPOCK{TI, TF, TM} <: CUSTOM_SOLVER_MODEL
   solver_state :: GENERIC_SOLVER_STATE{TF, TI}
   solver_state_internal :: SP_IMPLICITL_STATE_INTERNAL{TI, TF, TM}
-  problem_definition :: GENERIC_PROBLEM_DEFINITIONV2{TF, TI}
+  problem_definition :: GENERIC_PROBLEM_DEFINITION{TF, TI}
 end
+
+"""
+Give models a structure:
+
+state :: GENERIC_SOLVER_STATE{TF, TI}
+mul_state ::
+S1_state
+S2_state
+S3_state
+prox_g*_state
+sp_state :: If applicable
+qn_state :: If applicable Broyden or AA
+problem :: GENERIC_PROBLEM_DEFINITION{TF, TI}
+"""
 
 """
 Verbose levels
@@ -328,29 +257,26 @@ end
 # Model union types
 ##############
 
-# All models with their dynamics in L
-const MODEL_DYNAMICSL = Union{MODEL_CP_DYNAMICSL, MODEL_SP_DYNAMICSL}
-
 # All models with L implicitly constructed
-const MODEL_IMPLICITL = Union{MODEL_CP_IMPLICITL, MODEL_SP_IMPLICITL}
+const MODEL_IMPLICITL = Union{CPOCK, SPOCK}
 
 # All models using the plain CP algorithm
-const MODEL_CP = Union{MODEL_CP_DYNAMICSL, MODEL_CP_IMPLICITL}
+const MODEL_CP = Union{CPOCK}
 
 # All models using the CP + SuperMann algorithm
-const MODEL_SP = Union{MODEL_SP_DYNAMICSL, MODEL_SP_IMPLICITL}
+const MODEL_SP = Union{SPOCK}
 
 #####################################################
 # Exposed API funcions
 #####################################################
 
 function build_model(
-  scen_tree :: ScenarioTree, 
-  cost :: Cost, 
+  scen_tree :: AbstractScenarioTree, 
+  cost :: AbstractCost, 
   dynamics :: Dynamics, 
-  rms :: Union{Vector{RiskMeasureV1}, Vector{RiskMeasureV2}},
-  constraints :: ConvexConstraints,
-  solver_options :: SolverOptions = SolverOptions(DYNAMICSL, CP)
+  rms :: Union{Vector{AbstractRiskMeasure}, Vector{RiskMeasure}},
+  constraints :: AbstractConvexConstraints,
+  solver_options :: SolverOptions = SolverOptions(CP, nothing)
 )
 """
 Supported combinations of solver options:
@@ -360,18 +286,10 @@ Supported combinations of solver options:
 - CP + Implicit L
 """
 
-if solver_options.dynamics == DYNAMICSL
-  if solver_options.algorithm == CP
-    return build_model_cp_dynamicsl(scen_tree, cost, dynamics, rms)
-  elseif solver_options.algorithm == SP
-    return build_model_sp_dynamicsl(scen_tree, cost, dynamics, rms)
-  end
-elseif solver_options.dynamics == L_IMPLICIT
-  if solver_options.algorithm == CP
-    return build_model_cp_implicitl(scen_tree, cost, dynamics, rms, constraints)
-  elseif solver_options.algorithm == SP
-    return build_model_sp_implicitl(scen_tree, cost, dynamics, rms, constraints)
-  end
+if solver_options.algorithm == CP
+  return build_cpock(scen_tree, cost, dynamics, rms, constraints)
+elseif solver_options.algorithm == SP
+  return build_spock(scen_tree, cost, dynamics, rms, constraints, solver_options.qnewton)
 end
 
 error("This combination of solver options is not supported.")

@@ -14,7 +14,7 @@ nx = 2; nu = 1
 scen_tree = spock.generate_scenario_tree_uniform_branching_factor_v2(N, d, nx, nu)
 
 # Cost definition (Quadratic, positive definite)
-cost = spock.CostV2(
+cost = spock.Cost(
   # Q matrices
   collect([
     LA.Matrix([(2.2) 0; 0 (3.7)]) / 3.7 for i in 1:scen_tree.n - 1
@@ -40,7 +40,7 @@ cost = spock.CostV2(
   #   rand(nx, nx) for i in 1:scen_tree.n_leaf_nodes
   # ])
 
-  # cost = spock.CostV2(
+  # cost = spock.Cost(
   #   # Q matrices
   #   map(x -> x' * x, Qs),
   #   # R matrices
@@ -76,6 +76,6 @@ constraints = spock.UniformRectangle(
 
 factor = 1e0
 
-cp_model = spock.build_model(scen_tree, cost, dynamics, rms, constraints, spock.SolverOptions(spock.L_IMPLICIT, spock.SP))
+cp_model = spock.build_model(scen_tree, cost, dynamics, rms, constraints, spock.SolverOptions(spock.SP, nothing))
 # @profview spock.solve_model!(cp_model, [0.1, .1], tol=1e-3)
 @time spock.solve_model!(cp_model, [0.1, .1] / factor, tol=1e-3 / factor)

@@ -22,18 +22,15 @@ module spock
   include("model_algorithms/qnewton_directions/anderson.jl")
 
   ## The supported dynamics
-  include("model_dynamics/dynamics_in_L.jl")
   include("model_dynamics/implicit_l.jl")
 
   ## The specific models
   include("models/cpock.jl")
   include("models/spock.jl")
-  include("models/model_cp_implicit.jl")
-  include("models/model_sp_implicit.jl")
   include("models/model_mosek.jl")
 
   # Precompile for the required arguments
-  precompile(solve_model!, (MODEL_CP_IMPLICITL, Vector{Float64}))
-  precompile(solve_model!, (MODEL_SP_IMPLICITL, Vector{Float64}))
+  precompile(solve_model!, (CPOCK, Vector{Float64}))
+  precompile(solve_model!, (SPOCK, Vector{Float64}))
 
 end

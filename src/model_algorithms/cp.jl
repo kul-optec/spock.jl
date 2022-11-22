@@ -1,58 +1,3 @@
-######
-# Model interfaces
-######
-
-function spock_mul!(
-  model :: CUSTOM_SOLVER_MODEL,
-  C :: AbstractArray{TF, 1},
-  trans :: Bool,
-  B :: AbstractArray{TF, 1},
-  α :: TF,
-  β :: TF
-) where {TF <: Real}
-"""
-In place matrix-vector multiply-Add
-
-C <- model.L * B * α + C * β when trans is false, otherwise
-C <- model.L' * B * α + C * β
-"""
-
-  error("Function not implemented for this model")
-
-end
-
-function prox_f!(
-  model :: CUSTOM_SOLVER_MODEL,
-  arg :: AbstractArray{TF, 1},
-  gamma :: TF
-) where {TF <: Real}
-"""
-This function accepts an argument arg and parameter gamma.
-With these, it computes the prox_f^gamma(arg) and stores the result in arg.
-
-arg <- prox_f^gamma(arg)
-"""
-
-  error("Function not implemented for this model")
-
-end
-
-function prox_h_conj!(
-  model :: CUSTOM_SOLVER_MODEL,
-  arg :: AbstractArray{TF, 1},
-  sigma :: TF
-) where {TF <: Real}
-"""
-This function accepts an argument arg and parameter sigma.
-With these, it computes the prox_h_conj^sigma(arg) and stores the result in arg.
-
-arg <- prox_h_conj^sigma(arg)
-"""
-
-  error("Function not implemented for this model")
-
-end
-
 #########
 ### Generic Chambolle-Pock implementation
 #########
@@ -238,7 +183,7 @@ end
 
 # end
 
-# precompile(should_terminate!, (MODEL_CP_IMPLICITL, Float64, Float64, Float64))
+# precompile(should_terminate!, (CPOCK, Float64, Float64, Float64))
 
 function run_cp!(
   model :: MODEL_CP;

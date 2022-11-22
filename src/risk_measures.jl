@@ -74,17 +74,9 @@ struct ConvexCone
   subcones:: Vector{ConvexBaseCone}
 end
 
-abstract type RiskMeasure end 
+abstract type AbstractRiskMeasure end 
 
-struct RiskMeasureV1 <: RiskMeasure
-  A:: Matrix{Float64}
-  B:: Matrix{Float64}
-  b:: Vector{Float64}
-  C:: ConvexCone
-  D:: ConvexCone
-end
-
-struct RiskMeasureV2 <: RiskMeasure
+struct RiskMeasure <: AbstractRiskMeasure
   E:: Matrix{Float64}
   F:: Matrix{Float64}
   b:: Vector{Float64}
@@ -98,78 +90,9 @@ end
 """
 Return a RiskMeasure object with a uniform risk mapping over all nodes
 """
-function get_uniform_rms(A, B, b, C, D, d, N)
-  return [
-        RiskMeasureV1(
-            A,
-            B,
-            b,
-            C,
-            D
-        ) for _ in 1:(d^(N - 1) - 1) / (d - 1)
-    ]
-end
-
-"""
-Returns a RiskMeasure object for a constant branching factor d where all risk mappings are uniformly robust
-A = I_d
-B = [1_d'; - 1_d']
-b = [1; -1]
-"""
-function get_uniform_rms_robust(d, N)
-  return get_uniform_rms(
-    LA.I(d),
-    vcat([1. for _ in 1:d]', [-1. for _ in 1:d]'),
-    [1.; -1.],
-    ConvexCone([MOI.Nonnegatives(d)]),
-    ConvexCone([MOI.Nonnegatives(2)]),
-    d,
-    N
-  )
-end
-
-"""
-Returns a RiskMeasure object for a constant branching factor d where all risk mappings are uniformly AV@R
-A = I_d
-B = [I_d; 1_d'; - 1_d']
-b = [p / alpha; 1; -1]
-"""
-function get_uniform_rms_avar(p, alpha, d, N)
-  return get_uniform_rms(
-    LA.I(d),
-    vcat(LA.I(d), [1. for _ in 1:d]', [-1. for _ in 1:d]'),
-    [p / alpha; 1.; -1.],
-    ConvexCone([MOI.Nonnegatives(d)]),
-    ConvexCone([MOI.Nonnegatives(d+2)]),
-    d,
-    N
-  )
-end
-
-function get_uniform_rms_risk_neutral(p, d, N)
-  return get_uniform_rms_avar(p, 1., d, N)
-end
-
-function get_uniform_rms_tv(p, r, d, N)
-  return get_uniform_rms(
-    hcat(LA.I(d), zeros(d, d)),
-    vcat(hcat(zeros(1, d), ones(1, d)), hcat(LA.I(d), -LA.I(d)), hcat(-LA.I(d), -LA.I(d)), hcat(ones(1, d), zeros(1, d)), hcat(-ones(1, d), zeros(1, d))),
-    [2 * r; p; -p; 1.; -1.],
-    ConvexCone([MOI.Nonnegatives(2*d)]),
-    ConvexCone([MOI.Nonnegatives(2*d+3)]),
-    d,
-    N
-  )
-end
-
-################################ v2
-
-"""
-Return a RiskMeasure object with a uniform risk mapping over all nodes
-"""
 function get_uniform_rms_v2(E, F, b, K, d, N)
   return [
-        RiskMeasureV2(
+        RiskMeasure(
             E,
             F,
             b,
@@ -203,7 +126,7 @@ end
 
 function get_nonuniform_rms_avar_v2(d, N)
   return [
-    RiskMeasureV2(
+    RiskMeasure(
         [rand() * LA.I(d); - LA.I(d); [1. for _ in 1:d]'],
         zeros(2*d+1, d),
         [rand_probvec2(d); [0. for _ in 1:d]; 1.],

@@ -8,6 +8,7 @@ include("../src/cost.jl")
 include("../src/dynamics.jl")
 include("../src/scenario_tree.jl")
 include("../src/risk_measures.jl")
+include("../src/constraints.jl")
 include("../src/model.jl")
 
 ## The supported algorithms
@@ -15,13 +16,10 @@ include("../src/model_algorithms/cp.jl")
 include("../src/model_algorithms/sp.jl")
 
 ## The supported dynamics
-include("../src/model_dynamics/dynamics_in_L.jl")
 include("../src/model_dynamics/implicit_l.jl")
 
 ## The specific models
 include("../src/models/cpock.jl")
-include("../src/models/spock.jl")
-include("../src/models/model_cp_implicit.jl")
 include("../src/models/model_mosek.jl")
 
 

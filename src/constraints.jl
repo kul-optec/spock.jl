@@ -1,4 +1,4 @@
-abstract type ConvexConstraints end
+abstract type AbstractConvexConstraints end
 
 """
 Impose a uniform constraint on all nodes
@@ -8,7 +8,7 @@ Impose a uniform constraint on all nodes
 - u_min 
 - u_max
 """
-struct UniformRectangle{TF <: Real, TI <: Integer} <: ConvexConstraints
+struct UniformRectangle{TF <: Real, TI <: Integer} <: AbstractConvexConstraints
   x_min :: TF
   x_max :: TF
   u_min :: TF
