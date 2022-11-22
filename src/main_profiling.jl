@@ -76,7 +76,11 @@ constraints = spock.UniformRectangle(
 
 factor = 1e0
 
-cp_model = spock.build_model(scen_tree, cost, dynamics, rms, constraints, spock.SolverOptions(spock.SP, nothing))
+cp_model = spock.build_model(scen_tree, cost, dynamics, rms, constraints, spock.SolverOptions(spock.SP, spock.AA))
+# @profview spock.solve_model!(cp_model, [0.1, .1], tol=1e-3)
+@time spock.solve_model!(cp_model, [0.1, .1] / factor, tol=1e-3 / factor)
+
+cp_model = spock.build_model(scen_tree, cost, dynamics, rms, constraints, spock.SolverOptions(spock.SP, spock.RB))
 # @profview spock.solve_model!(cp_model, [0.1, .1], tol=1e-3)
 @time spock.solve_model!(cp_model, [0.1, .1] / factor, tol=1e-3 / factor)
 

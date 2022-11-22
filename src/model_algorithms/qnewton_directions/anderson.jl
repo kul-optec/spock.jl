@@ -1,5 +1,5 @@
 function anderson!(
-  model :: MODEL_SP,
+  model :: SPOCK_AA,
   iter :: TI
 ) where {TI <: Integer}
 

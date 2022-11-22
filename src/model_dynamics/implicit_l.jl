@@ -227,9 +227,9 @@ function L!(model :: MODEL_IMPLICITL, z :: AbstractArray{TF, 1}, v :: AbstractAr
     for j in model.problem.scen_tree.child_mapping[i]
       j_ind = j - 1
       # v3 = sqrt(Q) * x
-      LA.mul!(model.solver_state_internal.mul_x_workspace, model.solver_state_internal.sqrtQ[j_ind], view(z, model.solver_state_internal.x_inds[(i - 1) * nx + 1] : model.solver_state_internal.x_inds[i * nx]))
+      LA.mul!(model.solver_state_internal.mul_x_wsp, model.solver_state_internal.sqrtQ[j_ind], view(z, model.solver_state_internal.x_inds[(i - 1) * nx + 1] : model.solver_state_internal.x_inds[i * nx]))
       for k = 1:nx
-        v[v3_offset + (j_ind - 1) * nx + k] = model.solver_state_internal.mul_x_workspace[k]
+        v[v3_offset + (j_ind - 1) * nx + k] = model.solver_state_internal.mul_x_wsp[k]
       end
     end
   end
@@ -240,9 +240,9 @@ function L!(model :: MODEL_IMPLICITL, z :: AbstractArray{TF, 1}, v :: AbstractAr
     for j in model.problem.scen_tree.child_mapping[i]
       j_ind = j - 1
       # v4 = sqrt(R) * u
-      LA.mul!(model.solver_state_internal.mul_u_workspace, model.solver_state_internal.sqrtR[j_ind], view(z, model.solver_state_internal.u_inds[(i - 1) * nu + 1] : model.solver_state_internal.u_inds[i * nu]))
+      LA.mul!(model.solver_state_internal.mul_u_wsp, model.solver_state_internal.sqrtR[j_ind], view(z, model.solver_state_internal.u_inds[(i - 1) * nu + 1] : model.solver_state_internal.u_inds[i * nu]))
       for k = 1:nu
-        v[v4_offset + (j_ind - 1) * nu + k] = model.solver_state_internal.mul_u_workspace[k]
+        v[v4_offset + (j_ind - 1) * nu + k] = model.solver_state_internal.mul_u_wsp[k]
       end
     end
   end
@@ -287,9 +287,9 @@ function L!(model :: MODEL_IMPLICITL, z :: AbstractArray{TF, 1}, v :: AbstractAr
   # v11_offset = v6_offset + (n - 1)
   for i = 1:n_leafs
     j = i + leaf_offset
-    LA.mul!(model.solver_state_internal.mul_x_workspace, model.solver_state_internal.sqrtQN[i], view(z, model.solver_state_internal.x_inds[(j - 1) * nx + 1] : model.solver_state_internal.x_inds[j * nx]))
+    LA.mul!(model.solver_state_internal.mul_x_wsp, model.solver_state_internal.sqrtQN[i], view(z, model.solver_state_internal.x_inds[(j - 1) * nx + 1] : model.solver_state_internal.x_inds[j * nx]))
     for k = 1:nx
-      v[v11_offset + (i - 1) * nx + k] = model.solver_state_internal.mul_x_workspace[k]
+      v[v11_offset + (i - 1) * nx + k] = model.solver_state_internal.mul_x_wsp[k]
     end
   end
 
@@ -365,9 +365,9 @@ function L_transpose!(model :: MODEL_IMPLICITL, z :: AbstractArray{TF, 1}, v :: 
   for i = 1:n_non_leafs
     for j in model.problem.scen_tree.child_mapping[i]
       j_ind = j - 1
-      LA.mul!(model.solver_state_internal.mul_x_workspace, model.solver_state_internal.sqrtQ[j_ind], view(v, v3_offset + (j_ind - 1) * nx + 1 : v3_offset + j_ind * nx))
+      LA.mul!(model.solver_state_internal.mul_x_wsp, model.solver_state_internal.sqrtQ[j_ind], view(v, v3_offset + (j_ind - 1) * nx + 1 : v3_offset + j_ind * nx))
       for k = 1:nx
-        z[model.solver_state_internal.x_inds[(i - 1) * nx + k]] += model.solver_state_internal.mul_x_workspace[k]
+        z[model.solver_state_internal.x_inds[(i - 1) * nx + k]] += model.solver_state_internal.mul_x_wsp[k]
       end
     end
   end
@@ -389,9 +389,9 @@ function L_transpose!(model :: MODEL_IMPLICITL, z :: AbstractArray{TF, 1}, v :: 
   # Add sqrt(Q) * v11 term
   for i = 1:n_leafs
     j = leaf_offset + i
-    LA.mul!(model.solver_state_internal.mul_x_workspace, model.solver_state_internal.sqrtQN[i], view(v, v11_offset + (i-1) * nx + 1 : v11_offset + i * nx))
+    LA.mul!(model.solver_state_internal.mul_x_wsp, model.solver_state_internal.sqrtQN[i], view(v, v11_offset + (i-1) * nx + 1 : v11_offset + i * nx))
     for k = 1:nx
-      z[model.solver_state_internal.x_inds[(j-1) * nx + k]] += model.solver_state_internal.mul_x_workspace[k]
+      z[model.solver_state_internal.x_inds[(j-1) * nx + k]] += model.solver_state_internal.mul_x_wsp[k]
     end
   end
 
@@ -412,9 +412,9 @@ function L_transpose!(model :: MODEL_IMPLICITL, z :: AbstractArray{TF, 1}, v :: 
   for i = 1:n_non_leafs
     for j in model.problem.scen_tree.child_mapping[i]
       j_ind = j - 1
-      LA.mul!(model.solver_state_internal.mul_u_workspace, model.solver_state_internal.sqrtR[j_ind], view(v, v4_offset + (j_ind - 1) * nu + 1 : v4_offset + j_ind * nu))
+      LA.mul!(model.solver_state_internal.mul_u_wsp, model.solver_state_internal.sqrtR[j_ind], view(v, v4_offset + (j_ind - 1) * nu + 1 : v4_offset + j_ind * nu))
       for k = 1:nu
-        z[model.solver_state_internal.u_inds[(i - 1) * nu + k]] += model.solver_state_internal.mul_u_workspace[k]
+        z[model.solver_state_internal.u_inds[(i - 1) * nu + k]] += model.solver_state_internal.mul_u_wsp[k]
       end
     end
   end
@@ -492,27 +492,27 @@ function spock_dot(
   sigma :: TF
 ) where {TF <: Real}
 
-  L!(model, arg2_z, model.solver_state_internal.workspace_Lv)
-  L_transpose!(model, model.solver_state_internal.workspace_Lz, arg2_v)
+  L!(model, arg2_z, model.solver_state_internal.wsp_Lv)
+  L_transpose!(model, model.solver_state_internal.wsp_Lz, arg2_v)
 
   for k = 1:model.state.nz
-    model.solver_state_internal.workspace_Lz[k] = arg2_z[k] - gamma * model.solver_state_internal.workspace_Lz[k]
+    model.solver_state_internal.wsp_Lz[k] = arg2_z[k] - gamma * model.solver_state_internal.wsp_Lz[k]
   end
   for k = 1:model.state.nv
-    model.solver_state_internal.workspace_Lv[k] = - sigma * model.solver_state_internal.workspace_Lv[k] + arg2_v[k]
+    model.solver_state_internal.wsp_Lv[k] = - sigma * model.solver_state_internal.wsp_Lv[k] + arg2_v[k]
   end
 
   res = 0.
   for k = 1:model.state.nz
-    res += arg1_z[k] * model.solver_state_internal.workspace_Lz[k]
+    res += arg1_z[k] * model.solver_state_internal.wsp_Lz[k]
   end
   for k = 1:model.state.nv
-    res += arg1_v[k] * model.solver_state_internal.workspace_Lv[k]
+    res += arg1_v[k] * model.solver_state_internal.wsp_Lv[k]
   end
   
   return res
 
-  # return arg1_z' * model.solver_state_internal.workspace_Lz + arg1_v' * model.solver_state_internal.workspace_Lv
+  # return arg1_z' * model.solver_state_internal.wsp_Lz + arg1_v' * model.solver_state_internal.wsp_Lv
 end
 
 function spock_dot(
@@ -588,19 +588,19 @@ function projection_S1!(
     end
 
     for j in children_of_i
-      LA.mul!(model.solver_state_internal.mul_u_workspace, model.problem.dynamics.B[model.problem.scen_tree.node_info[j].w]', view(q, (j - 1) * nx + 1 : j * nx))
+      LA.mul!(model.solver_state_internal.mul_u_wsp, model.problem.dynamics.B[model.problem.scen_tree.node_info[j].w]', view(q, (j - 1) * nx + 1 : j * nx))
       for k = 1:nu
-        sum_for_d[k] += model.solver_state_internal.mul_u_workspace[k]
+        sum_for_d[k] += model.solver_state_internal.mul_u_wsp[k]
       end
       # sum_for_d += model.problem.dynamics.B[model.problem.scen_tree.node_info[j].w]' * q[(j - 1) * nx + 1 : j * nx]
     end
     
     for k = 1:nu
-      model.solver_state_internal.mul_u_workspace[k] = z1[u_offset + (i - 1) * nu + k] - sum_for_d[k]
+      model.solver_state_internal.mul_u_wsp[k] = z1[u_offset + (i - 1) * nu + k] - sum_for_d[k]
     end
-    LA.ldiv!(model.solver_state_internal.R_chol[i], model.solver_state_internal.mul_u_workspace)
+    LA.ldiv!(model.solver_state_internal.R_chol[i], model.solver_state_internal.mul_u_wsp)
     for k = 1:nu
-      d[(i - 1) * nu + k] = model.solver_state_internal.mul_u_workspace[k]
+      d[(i - 1) * nu + k] = model.solver_state_internal.mul_u_wsp[k]
     end
 
     # Set q_i to zero
@@ -611,24 +611,24 @@ function projection_S1!(
       # q[(i - 1) * nx + 1 : i * nx] += ABK[j]' * (
       #   P[j] * model.problem.dynamics.B[model.problem.scen_tree.node_info[j].w] * d[(i - 1) * nu + 1 : i * nu] + q[(j-1) * nx + 1 : j * nx]
       # )
-      LA.mul!(model.solver_state_internal.mul_x_workspace, model.problem.dynamics.B[model.problem.scen_tree.node_info[j].w], view(d, (i - 1) * nu + 1 : i * nu))
-      LA.mul!(model.solver_state_internal.mul_x_workspace2, P[j], model.solver_state_internal.mul_x_workspace)
+      LA.mul!(model.solver_state_internal.mul_x_wsp, model.problem.dynamics.B[model.problem.scen_tree.node_info[j].w], view(d, (i - 1) * nu + 1 : i * nu))
+      LA.mul!(model.solver_state_internal.mul_x_wsp2, P[j], model.solver_state_internal.mul_x_wsp)
       for k = 1:nx
-        model.solver_state_internal.mul_x_workspace2[k] += q[(j-1) * nx + k]  
+        model.solver_state_internal.mul_x_wsp2[k] += q[(j-1) * nx + k]  
       end
-      LA.mul!(model.solver_state_internal.mul_x_workspace, ABK[j]', model.solver_state_internal.mul_x_workspace2)
+      LA.mul!(model.solver_state_internal.mul_x_wsp, ABK[j]', model.solver_state_internal.mul_x_wsp2)
       for k = 1:nx
-        q[(i - 1) * nx + k] += model.solver_state_internal.mul_x_workspace[k]
+        q[(i - 1) * nx + k] += model.solver_state_internal.mul_x_wsp[k]
       end
 
     end
     # q[(i - 1) * nx + 1 : i * nx] += K[i]' * ( d[(i - 1) * nu + 1 : i * nu] - z1[u_offset + (i - 1) * nu + 1 : u_offset + i * nu])
     for k = 1:nu
-      model.solver_state_internal.mul_u_workspace[k] = d[(i - 1) * nu + k] - z1[u_offset + (i - 1) * nu + k]
+      model.solver_state_internal.mul_u_wsp[k] = d[(i - 1) * nu + k] - z1[u_offset + (i - 1) * nu + k]
     end
-    LA.mul!(model.solver_state_internal.mul_x_workspace, K[i]', model.solver_state_internal.mul_u_workspace)
+    LA.mul!(model.solver_state_internal.mul_x_wsp, K[i]', model.solver_state_internal.mul_u_wsp)
     for k = 1:nx
-      q[(i - 1) * nx + k] += model.solver_state_internal.mul_x_workspace[k]
+      q[(i - 1) * nx + k] += model.solver_state_internal.mul_x_wsp[k]
     end
 
     for j = (i - 1) * nx + 1 : i * nx
@@ -673,9 +673,9 @@ function projection_S1!(
     end
     for j in model.problem.scen_tree.child_mapping[i]
       LA.mul!(view(z1, (j - 1) * nx + 1 : j * nx), ABK[j], view(z1, (i - 1) * nx + 1 : i * nx))
-      LA.mul!(model.solver_state_internal.mul_x_workspace, model.problem.dynamics.B[model.problem.scen_tree.node_info[j].w], view(d, (i - 1) * nu + 1 : i * nu))
+      LA.mul!(model.solver_state_internal.mul_x_wsp, model.problem.dynamics.B[model.problem.scen_tree.node_info[j].w], view(d, (i - 1) * nu + 1 : i * nu))
       for k = 1:nx
-        z1[(j - 1) * nx + k] += model.solver_state_internal.mul_x_workspace[k]
+        z1[(j - 1) * nx + k] += model.solver_state_internal.mul_x_wsp[k]
       end
     end
   end
@@ -767,37 +767,37 @@ function project_on_leaf_constraints!(
 
   for i = 1:n_leafs
     # v13
-    model.solver_state_internal.proj_leafs_workspace[1] = arg[v13_offset + i]
+    model.solver_state_internal.proj_leafs_wsp[1] = arg[v13_offset + i]
     # v11
     for j = 1:nx
-      model.solver_state_internal.proj_leafs_workspace[j + 1] = arg[v11_offset + (i - 1) * nx + j]
+      model.solver_state_internal.proj_leafs_wsp[j + 1] = arg[v11_offset + (i - 1) * nx + j]
     end
     # v12
-    model.solver_state_internal.proj_leafs_workspace[nx + 2] = arg[v12_offset + i]
+    model.solver_state_internal.proj_leafs_wsp[nx + 2] = arg[v12_offset + i]
 
-    # model.solver_state_internal.proj_leafs_workspace[1:nx+2] = MOD.projection_on_set(
+    # model.solver_state_internal.proj_leafs_wsp[1:nx+2] = MOD.projection_on_set(
     #   MOD.DefaultDistance(), 
-    #   model.solver_state_internal.proj_leafs_workspace, 
+    #   model.solver_state_internal.proj_leafs_wsp, 
     #   MOI.SecondOrderCone(nx + 2)
     # )
-    project_onto_cone!(view(model.solver_state_internal.proj_leafs_workspace, 1 : nx + 2), MOI.SecondOrderCone(nx + 2))
+    project_onto_cone!(view(model.solver_state_internal.proj_leafs_wsp, 1 : nx + 2), MOI.SecondOrderCone(nx + 2))
 
     ## TODO: SOC does not always return t >= |x|... 
     # v13
-    arg[v13_offset + i] = model.solver_state_internal.proj_leafs_workspace[1]
-    # t_norm = LA.norm(model.solver_state_internal.proj_leafs_workspace[2:nx+2])
-    # if t_norm > model.solver_state_internal.proj_leafs_workspace[1]
+    arg[v13_offset + i] = model.solver_state_internal.proj_leafs_wsp[1]
+    # t_norm = LA.norm(model.solver_state_internal.proj_leafs_wsp[2:nx+2])
+    # if t_norm > model.solver_state_internal.proj_leafs_wsp[1]
     #   arg[v13_offset + i] = t_norm
     # else
-    #   arg[v13_offset + i] = model.solver_state_internal.proj_leafs_workspace[1]
+    #   arg[v13_offset + i] = model.solver_state_internal.proj_leafs_wsp[1]
     # end
     # @assert arg[v13_offset + i] >= t_norm
     # v11
     for j = 1:nx
-      arg[v11_offset + (i - 1) * nx + j] = model.solver_state_internal.proj_leafs_workspace[j + 1]
+      arg[v11_offset + (i - 1) * nx + j] = model.solver_state_internal.proj_leafs_wsp[j + 1]
     end
     # v12
-    arg[v12_offset + i] = model.solver_state_internal.proj_leafs_workspace[nx + 2]
+    arg[v12_offset + i] = model.solver_state_internal.proj_leafs_wsp[nx + 2]
   end
 
   ## V14
@@ -857,45 +857,45 @@ function project_on_nonleaf_constraints!(
       j_ind = j - 1
 
       # v6
-      model.solver_state_internal.proj_nleafs_workspace[1] = arg[v6_offset + j_ind]
+      model.solver_state_internal.proj_nleafs_wsp[1] = arg[v6_offset + j_ind]
       # v3
       for k = 1:nx
-        model.solver_state_internal.proj_nleafs_workspace[k + 1] = arg[v3_offset + (j_ind - 1) * nx + k]
+        model.solver_state_internal.proj_nleafs_wsp[k + 1] = arg[v3_offset + (j_ind - 1) * nx + k]
       end
       # v4
       for k = 1:nu
-        model.solver_state_internal.proj_nleafs_workspace[1 + nx + k] = arg[v4_offset + (j_ind - 1) * nu + k]
+        model.solver_state_internal.proj_nleafs_wsp[1 + nx + k] = arg[v4_offset + (j_ind - 1) * nu + k]
       end
       # v5
-      model.solver_state_internal.proj_nleafs_workspace[1 + nx + nu + 1] = arg[v5_offset + j_ind]
+      model.solver_state_internal.proj_nleafs_wsp[1 + nx + nu + 1] = arg[v5_offset + j_ind]
 
-      # model.solver_state_internal.proj_nleafs_workspace[1:nx+nu+2] = MOD.projection_on_set(
+      # model.solver_state_internal.proj_nleafs_wsp[1:nx+nu+2] = MOD.projection_on_set(
       #   MOD.DefaultDistance(), 
-      #   model.solver_state_internal.proj_nleafs_workspace, 
+      #   model.solver_state_internal.proj_nleafs_wsp, 
       #   MOI.SecondOrderCone(nx + nu + 2)
       # )
-      project_onto_cone!(view(model.solver_state_internal.proj_nleafs_workspace, 1 : nx + nu + 2), MOI.SecondOrderCone(nx + nu + 2))
+      project_onto_cone!(view(model.solver_state_internal.proj_nleafs_wsp, 1 : nx + nu + 2), MOI.SecondOrderCone(nx + nu + 2))
 
       ## TODO: SOC does not always return t >= |x|... 
       # v6
-      arg[v6_offset + j_ind] = model.solver_state_internal.proj_nleafs_workspace[1]
-      # t_norm = LA.norm(model.solver_state_internal.proj_nleafs_workspace[2: nx + nu + 2])
-      # if t_norm > model.solver_state_internal.proj_nleafs_workspace[1]
+      arg[v6_offset + j_ind] = model.solver_state_internal.proj_nleafs_wsp[1]
+      # t_norm = LA.norm(model.solver_state_internal.proj_nleafs_wsp[2: nx + nu + 2])
+      # if t_norm > model.solver_state_internal.proj_nleafs_wsp[1]
       #   arg[v6_offset + j_ind] = t_norm
       # else
-      #   arg[v6_offset + j_ind] = model.solver_state_internal.proj_nleafs_workspace[1]
+      #   arg[v6_offset + j_ind] = model.solver_state_internal.proj_nleafs_wsp[1]
       # end
-      # @assert arg[v6_offset + j_ind] >= LA.norm(model.solver_state_internal.proj_nleafs_workspace[2: nx + nu + 2])
+      # @assert arg[v6_offset + j_ind] >= LA.norm(model.solver_state_internal.proj_nleafs_wsp[2: nx + nu + 2])
       # v3
       for k = 1:nx
-        arg[v3_offset + (j_ind - 1) * nx + k] = model.solver_state_internal.proj_nleafs_workspace[k + 1]
+        arg[v3_offset + (j_ind - 1) * nx + k] = model.solver_state_internal.proj_nleafs_wsp[k + 1]
       end
       # v4 
       for k = 1:nu
-        arg[v4_offset + (j_ind - 1) * nu + k] = model.solver_state_internal.proj_nleafs_workspace[1 + nx + k]
+        arg[v4_offset + (j_ind - 1) * nu + k] = model.solver_state_internal.proj_nleafs_wsp[1 + nx + k]
       end
       # v5
-      arg[v5_offset + j_ind]= model.solver_state_internal.proj_nleafs_workspace[1 + nx + nu + 1]
+      arg[v5_offset + j_ind]= model.solver_state_internal.proj_nleafs_wsp[1 + nx + nu + 1]
     end
   end
 
@@ -939,13 +939,13 @@ arg <- prox_h_conj^sigma(arg)
   end
 
   ### Copy the modified dual vector
-  copyto!(model.solver_state_internal.prox_v_workspace, arg)
+  copyto!(model.solver_state_internal.prox_v_wsp, arg)
 
   # arg <- proj_S3(v_modified)
   project_on_leaf_constraints!(model, arg)
   project_on_nonleaf_constraints!(model, arg)
 
   @simd for i = 1:model.state.nv
-    @inbounds arg[i] = sigma * (model.solver_state_internal.prox_v_workspace[i] - arg[i])
+    @inbounds arg[i] = sigma * (model.solver_state_internal.prox_v_wsp[i] - arg[i])
   end
 end

@@ -3,7 +3,7 @@
 #########
 
 function update_zbar!(
-  model :: MODEL_SP,
+  model :: SPOCK,
   gamma :: TF
 ) where {TF <: Real}
 
@@ -15,24 +15,24 @@ function update_zbar!(
 end
 
 function update_vbar!(
-  model :: MODEL_SP,
+  model :: SPOCK,
   sigma :: TF
 ) where {TF <: Real}
 
-  # z_workspace = 2 * zbar - z
-  copyto!(model.state.z_workspace, model.state.z)
-  LA.BLAS.axpby!(2., model.state.zbar, -1., model.state.z_workspace)
+  # z_wsp = 2 * zbar - z
+  copyto!(model.state.z_wsp, model.state.z)
+  LA.BLAS.axpby!(2., model.state.zbar, -1., model.state.z_wsp)
 
-  # vbar = sigma * L (z_workspace) + v
+  # vbar = sigma * L (z_wsp) + v
   copyto!(model.state.vbar, model.state.v)
-  spock_mul!(model, model.state.vbar, false, model.state.z_workspace, sigma, 1.)
+  spock_mul!(model, model.state.vbar, false, model.state.z_wsp, sigma, 1.)
 
   # vbar = prox_h_conj(vbar)
   prox_h_conj!(model, model.state.vbar, sigma)
 end
 
 function update_residual!(
-  model :: MODEL_SP,
+  model :: SPOCK,
   gamma :: TF,
   sigma :: TF
 ) where {TF <: Real}
@@ -51,7 +51,7 @@ function update_residual!(
 end
 
 function update_z!(
-  model :: MODEL_SP,
+  model :: SPOCK,
   lambda :: TF
 ) where {TF <: Real}
 
@@ -61,7 +61,7 @@ function update_z!(
 end
 
 function update_v!(
-  model :: MODEL_SP,
+  model :: SPOCK,
   lambda :: TF
 ) where {TF <: Real}
 
@@ -81,7 +81,7 @@ function should_perform_k0(
 end
 
 function perform_k0!(
-  model :: MODEL_SP,
+  model :: SPOCK,
   rnorm :: TF,
   eta :: TF,
   loop :: Bool
@@ -116,7 +116,7 @@ function should_backtrack_loop(
 end
 
 function generate_candidate_update!(
-  model :: MODEL_SP,
+  model :: SPOCK,
   tau :: TF
 ) where {TF <: Real}
 
@@ -131,7 +131,7 @@ function generate_candidate_update!(
 end
 
 function update_candidate_residual!(
-  model :: MODEL_SP,
+  model :: SPOCK,
   gamma :: TF,
   sigma :: TF
 ) where {TF <: Real}
@@ -144,12 +144,12 @@ function update_candidate_residual!(
   prox_f!(model, model.solver_state_internal.wbar, gamma)
 
   ### ubar = prox_h_conj(u + sigma L(2 wbar - w))
-  # w_workspace = 2 * wbar - z
-  copyto!(model.solver_state_internal.w_workspace, model.solver_state_internal.w)
-  LA.BLAS.axpby!(2., model.solver_state_internal.wbar, -1., model.solver_state_internal.w_workspace)
-  # ubar = sigma * L (w_workspace) + u
+  # w_wsp = 2 * wbar - z
+  copyto!(model.solver_state_internal.w_wsp, model.solver_state_internal.w)
+  LA.BLAS.axpby!(2., model.solver_state_internal.wbar, -1., model.solver_state_internal.w_wsp)
+  # ubar = sigma * L (w_wsp) + u
   copyto!(model.solver_state_internal.ubar, model.solver_state_internal.u)
-  spock_mul!(model, model.solver_state_internal.ubar, false, model.solver_state_internal.w_workspace, sigma, 1.)
+  spock_mul!(model, model.solver_state_internal.ubar, false, model.solver_state_internal.w_wsp, sigma, 1.)
   # ubar = prox_h_conj(ubar)
   prox_h_conj!(model, model.solver_state_internal.ubar, sigma)
 
@@ -164,7 +164,7 @@ function update_candidate_residual!(
 end
 
 function should_perform_k1(
-  model :: MODEL_SP,
+  model :: SPOCK,
   rnorm :: TF,
   rtilde_norm :: TF,
   r_safe :: TF,
@@ -175,7 +175,7 @@ function should_perform_k1(
 end
 
 function perform_k1!(
-  model :: MODEL_SP,
+  model :: SPOCK,
   q :: TF,
   iter :: TI,
   rtilde_norm :: TF
@@ -191,7 +191,7 @@ function perform_k1!(
 end
 
 function should_perform_k2(
-  model :: MODEL_SP,
+  model :: SPOCK,
   rnorm :: TF,
   rtilde_norm :: TF,
   rho :: TF,
@@ -202,7 +202,7 @@ function should_perform_k2(
 end
 
 function perform_k2!(
-  model :: MODEL_SP,
+  model :: SPOCK,
   rtilde_norm :: TF,
   rho :: TF,
   lambda :: TF,
@@ -230,7 +230,7 @@ function perform_linesearch!(
 end
 
 function update_sy!(
-  model :: MODEL_SP
+  model :: SPOCK
 )
   # TODO: Only for Broyden
   # nz = model.state.nz
@@ -255,7 +255,7 @@ function update_sy!(
 end
 
 function update_Δr!(
-  model :: MODEL_SP
+  model :: SPOCK
 )
 
   for i in eachindex(model.state.Δz)
@@ -268,7 +268,7 @@ function update_Δr!(
 end
 
 function should_terminate!(
-  model :: MODEL_SP,
+  model :: SPOCK,
   alpha1 :: TF,
   alpha2 :: TF,
   tol :: TF,
@@ -344,7 +344,7 @@ function should_terminate!(
 end
 
 function update_Δold!(
-  model :: MODEL_SP
+  model :: SPOCK_AA
 )
 
   copyto!(model.qn_state.Δz_old, model.state.Δz)
@@ -355,8 +355,14 @@ function update_Δold!(
 
 end
 
+function update_Δold!(
+  model :: SPOCK_RB
+)
+
+end
+
 function run_sp!(
-  model :: MODEL_SP;
+  model :: SPOCK;
   MAX_ITER_COUNT :: Int64 = 1000,
   tol :: Float64 = 1e-3,
   verbose :: VERBOSE_LEVEL = SILENT,
@@ -418,17 +424,17 @@ function run_sp!(
         end
 
         for k = 1:model.state.nz
-          model.solver_state_internal.workspace_rho_z[k] = model.solver_state_internal.rw[k] - tau * model.solver_state_internal.dz[k]
+          model.solver_state_internal.wsp_rho_z[k] = model.solver_state_internal.rw[k] - tau * model.solver_state_internal.dz[k]
         end
         for k = 1:model.state.nv
-          model.solver_state_internal.workspace_rho_v[k] = model.solver_state_internal.ru[k] - tau * model.solver_state_internal.dv[k]
+          model.solver_state_internal.wsp_rho_v[k] = model.solver_state_internal.ru[k] - tau * model.solver_state_internal.dv[k]
         end
         rho = spock_dot(
           model,
           model.solver_state_internal.rw, 
           model.solver_state_internal.ru, 
-          model.solver_state_internal.workspace_rho_z,
-          model.solver_state_internal.workspace_rho_v,
+          model.solver_state_internal.wsp_rho_z,
+          model.solver_state_internal.wsp_rho_v,
           gamma,
           sigma
         )

@@ -19,13 +19,13 @@ function update_vbar!(
   sigma :: TF
 ) where {TF <: Real}
 
-  # z_workspace = 2 * zbar - z
-  copyto!(model.state.z_workspace, model.state.z)
-  LA.BLAS.axpby!(2., model.state.zbar, -1., model.state.z_workspace)
+  # z_wsp = 2 * zbar - z
+  copyto!(model.state.z_wsp, model.state.z)
+  LA.BLAS.axpby!(2., model.state.zbar, -1., model.state.z_wsp)
 
-  # vbar = sigma * L (z_workspace) + v
+  # vbar = sigma * L (z_wsp) + v
   copyto!(model.state.vbar, model.state.v)
-  spock_mul!(model, model.state.vbar, false, model.state.z_workspace, sigma, 1.)
+  spock_mul!(model, model.state.vbar, false, model.state.z_wsp, sigma, 1.)
 
   # vbar = prox_h_conj(vbar)
   prox_h_conj!(model, model.state.vbar, sigma)

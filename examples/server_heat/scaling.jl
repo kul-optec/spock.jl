@@ -28,7 +28,7 @@ for m = 1:M
 
     scen_tree, cost, dynamics, rms, constraints = get_server_heat_specs(N, nx, d)
 
-    model = spock.build_model(scen_tree, cost, dynamics, rms, constraints, spock.SolverOptions(spock.SP, nothing))
+    model = spock.build_model(scen_tree, cost, dynamics, rms, constraints, spock.SolverOptions(spock.SP, spock.AA))
 
     model_mosek = spock.build_model_mosek(scen_tree, cost, dynamics, rms, constraints)
     set_optimizer_attribute(model_mosek, "MSK_DPAR_INTPNT_TOL_REL_GAP", TOL)

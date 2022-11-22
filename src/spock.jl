@@ -26,11 +26,13 @@ module spock
 
   ## The specific models
   include("models/cpock.jl")
-  include("models/spock.jl")
+  include("models/spock_aa.jl")
+  include("models/spock_rb.jl")
   include("models/model_mosek.jl")
 
   # Precompile for the required arguments
   precompile(solve_model!, (CPOCK, Vector{Float64}))
-  precompile(solve_model!, (SPOCK, Vector{Float64}))
+  precompile(solve_model!, (SPOCK_AA, Vector{Float64}))
+  precompile(solve_model!, (SPOCK_RB, Vector{Float64}))
 
 end

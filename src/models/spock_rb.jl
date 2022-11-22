@@ -1,4 +1,4 @@
-function build_spock(
+function build_spock_rb(
   scen_tree :: ScenarioTree, 
   cost :: Cost, 
   dynamics :: Dynamics, 
@@ -104,24 +104,29 @@ function build_spock(
     [-Inf, -Inf]
   )
 
-  MAX_BROYDEN_K = 1 # todo
-  ANDERSON_BUFFER_SIZE = 3
+  MAX_BROYDEN_K = 20
 
   # TODO: Support more general cases
   ny = length(problem.rms[1].b)
   n_children = length(problem.dynamics.A)
 
-  aa_state = AA_STATE(
-    zeros(nz + nv, ANDERSON_BUFFER_SIZE),
-    zeros(nz + nv, ANDERSON_BUFFER_SIZE),
+  rb_state = RB_STATE(
     zeros(nz),
     zeros(nv),
     zeros(nz),
     zeros(nv),
-    zeros(nz + nv),
-    zeros(nz + nv, ANDERSON_BUFFER_SIZE),
-    LA.UpperTriangular(LA.Matrix(LA.I(ANDERSON_BUFFER_SIZE) * 1.)),
-    zeros(ANDERSON_BUFFER_SIZE),
+    zeros(nz),
+    zeros(nv),
+    zeros(nz),
+    zeros(nv),
+    zeros(nz * MAX_BROYDEN_K),
+    zeros(nv * MAX_BROYDEN_K),
+    zeros(nz * MAX_BROYDEN_K),
+    zeros(nv * MAX_BROYDEN_K),
+    zeros(nz * MAX_BROYDEN_K),
+    zeros(nv * MAX_BROYDEN_K),
+    ones(nz),
+    ones(nv),
   )
 
   solver_state_internal = SP_IMPLICITL_STATE_INTERNAL(
@@ -183,57 +188,28 @@ function build_spock(
     zeros(nz),
     zeros(nz),
     zeros(nv),
-    # zeros(nz),
-    # zeros(nv),
-    # zeros(nz),
-    # zeros(nv),
-    # zeros(nz),
-    # zeros(nv),
-    # zeros(nz),
-    # zeros(nv),
-    # zeros(nz * MAX_BROYDEN_K),
-    # zeros(nv * MAX_BROYDEN_K),
-    # zeros(nz * MAX_BROYDEN_K),
-    # zeros(nv * MAX_BROYDEN_K),
-    # zeros(nz * MAX_BROYDEN_K),
-    # zeros(nv * MAX_BROYDEN_K),
     ones(nz),
     ones(nv),
-    # ones(nz),
-    # ones(nv),
-    # Anderson
-    # zeros(nz + nv, ANDERSON_BUFFER_SIZE),
-    # zeros(nz + nv, ANDERSON_BUFFER_SIZE),
-    # zeros(nz),
-    # zeros(nv),
-    # zeros(nz),
-    # zeros(nv),
-    # zeros(nz + nv),
-    # zeros(nz + nv, ANDERSON_BUFFER_SIZE),
-    # LA.UpperTriangular(LA.Matrix(LA.I(ANDERSON_BUFFER_SIZE) * 1.)),
-    # zeros(ANDERSON_BUFFER_SIZE),
   )
 
-  return SPOCK(
+  return SPOCK_RB(
     solver_state,
     solver_state_internal,
-    aa_state,
+    rb_state,
     problem
   )
 
 end
 
 function generate_qnewton_direction!(
-  model :: SPOCK,
+  model :: SPOCK_RB,
   k :: TI,
   alpha1 :: TF,
   alpha2 :: TF
 ) where {TI <: Integer, TF <: Real}
 
   # println("TODO: Function not implemented for this model.")
-  # return restarted_broyden!(model, k, alpha1, alpha2)
-  k += 1
-  anderson!(model, k)
+  k = restarted_broyden!(model, k, alpha1, alpha2)
   return k 
 end
 
@@ -243,7 +219,7 @@ end
 ################
 
 function solve_model!(
-  model :: SPOCK,
+  model :: SPOCK_RB,
   x0 :: AbstractArray{TF, 1};
   tol :: TF = 1e-3,
   verbose :: VERBOSE_LEVEL = SILENT,

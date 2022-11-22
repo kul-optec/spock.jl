@@ -28,7 +28,7 @@ struct GENERIC_SOLVER_STATE{TF, TI} <: SOLVER_STATE
   v :: Vector{TF}
   zbar :: Vector{TF}
   vbar :: Vector{TF}
-  z_workspace :: Vector{TF}
+  z_wsp :: Vector{TF}
   rz :: Vector{TF}
   rv :: Vector{TF}
   xi_1 :: Vector{TF}
@@ -78,9 +78,9 @@ end
 ########
 
 struct CP_IMPLICITL_STATE_INTERNAL{TI, TF, TM} <: SOLVER_STATE_INTERNAL
-  mul_x_workspace :: Vector{TF}
-  mul_x_workspace2 :: Vector{TF}
-  mul_u_workspace :: Vector{TF}
+  mul_x_wsp :: Vector{TF}
+  mul_x_wsp2 :: Vector{TF}
+  mul_u_wsp :: Vector{TF}
   x_inds :: Vector{TI}
   u_inds :: Vector{TI}
   s_inds :: Vector{TI}
@@ -104,7 +104,7 @@ struct CP_IMPLICITL_STATE_INTERNAL{TI, TF, TM} <: SOLVER_STATE_INTERNAL
   ric_d :: Vector{TF}
   sum_for_d :: Vector{TF}
   # prox_g*
-  prox_v_workspace :: Vector{TF}
+  prox_v_wsp :: Vector{TF}
   v5_inds :: Vector{TI}
   v6_inds :: Vector{TI}
   v12_inds :: Vector{TI}
@@ -120,8 +120,8 @@ struct CP_IMPLICITL_STATE_INTERNAL{TI, TF, TM} <: SOLVER_STATE_INTERNAL
   v12_offset :: TI
   v13_offset :: TI
   v14_offset :: Union{TI, Nothing}
-  proj_leafs_workspace :: Vector{TF}
-  proj_nleafs_workspace :: Vector{TF}
+  proj_leafs_wsp :: Vector{TF}
+  proj_nleafs_wsp :: Vector{TF}
 end
 
 struct CPOCK{TI, TF, TM} <: CUSTOM_SOLVER_MODEL
@@ -135,9 +135,9 @@ end
 ########
 
 struct SP_IMPLICITL_STATE_INTERNAL{TI, TF, TM} <: SOLVER_STATE_INTERNAL
-  mul_x_workspace :: Vector{TF}
-  mul_x_workspace2 :: Vector{TF}
-  mul_u_workspace :: Vector{TF}
+  mul_x_wsp :: Vector{TF}
+  mul_x_wsp2 :: Vector{TF}
+  mul_u_wsp :: Vector{TF}
   x_inds :: Vector{TI}
   u_inds :: Vector{TI}
   s_inds :: Vector{TI}
@@ -161,7 +161,7 @@ struct SP_IMPLICITL_STATE_INTERNAL{TI, TF, TM} <: SOLVER_STATE_INTERNAL
   ric_d :: Vector{TF}
   sum_for_d :: Vector{TF}
   # prox_g*
-  prox_v_workspace :: Vector{TF}
+  prox_v_wsp :: Vector{TF}
   v5_inds :: Vector{TI}
   v6_inds :: Vector{TI}
   v12_inds :: Vector{TI}
@@ -177,11 +177,11 @@ struct SP_IMPLICITL_STATE_INTERNAL{TI, TF, TM} <: SOLVER_STATE_INTERNAL
   v12_offset :: TI
   v13_offset :: TI
   v14_offset :: Union{TI, Nothing}
-  proj_leafs_workspace :: Vector{TF}
-  proj_nleafs_workspace :: Vector{TF}  
+  proj_leafs_wsp :: Vector{TF}
+  proj_nleafs_wsp :: Vector{TF}  
   # For SuperMann
-  workspace_rho_z :: Vector{TF}
-  workspace_rho_v :: Vector{TF}
+  wsp_rho_z :: Vector{TF}
+  wsp_rho_v :: Vector{TF}
   dz :: Vector{TF}
   dv :: Vector{TF}
   w :: Vector{TF}
@@ -190,9 +190,9 @@ struct SP_IMPLICITL_STATE_INTERNAL{TI, TF, TM} <: SOLVER_STATE_INTERNAL
   ubar :: Vector{TF}
   rw :: Vector{TF}
   ru :: Vector{TF}
-  w_workspace :: Vector{TF}
-  workspace_Lz :: Vector{TF}
-  workspace_Lv :: Vector{TF}
+  w_wsp :: Vector{TF}
+  wsp_Lz :: Vector{TF}
+  wsp_Lv :: Vector{TF}
   # Restarted Broyden
   # sz :: Vector{TF}
   # sv :: Vector{TF}
@@ -210,19 +210,8 @@ struct SP_IMPLICITL_STATE_INTERNAL{TI, TF, TM} <: SOLVER_STATE_INTERNAL
   # Psv_buf :: Vector{TF}
   rz_old :: Vector{TF}
   rv_old :: Vector{TF}
-  # broyden_workspace_z :: Vector{TF}
-  # broyden_workspace_v :: Vector{TF}
-  # # Anderson
-  # MP :: Matrix{TF}
-  # MR :: Matrix{TF}
-  # Δz_old :: Vector{TF}
-  # Δv_old :: Vector{TF}
-  # Δrz_old :: Vector{TF}
-  # Δrv_old :: Vector{TF}
-  # aa_wsp :: Vector{TF}
-  # aa_Q :: Matrix{TF}
-  # aa_R :: LA.UpperTriangular{TF, Matrix{TF}}
-  # aa_gamma :: Vector{TF}
+  # broyden_wsp_z :: Vector{TF}
+  # broyden_wsp_v :: Vector{TF}
 end
 
 struct AA_STATE{TF}
@@ -238,10 +227,36 @@ struct AA_STATE{TF}
   aa_gamma :: Vector{TF}
 end
 
-struct SPOCK{TI, TF, TM} <: CUSTOM_SOLVER_MODEL
+struct RB_STATE{TF}
+  sz :: Vector{TF}
+  sv :: Vector{TF}
+  stildez :: Vector{TF}
+  stildev :: Vector{TF}
+  yz :: Vector{TF}
+  yv :: Vector{TF}
+  Psz :: Vector{TF}
+  Psv :: Vector{TF}
+  Sz_buf :: Vector{TF}
+  Sv_buf :: Vector{TF}
+  Stildez_buf :: Vector{TF}
+  Stildev_buf :: Vector{TF}
+  Psz_buf :: Vector{TF}
+  Psv_buf :: Vector{TF}
+  broyden_wsp_z :: Vector{TF}
+  broyden_wsp_v :: Vector{TF}
+end
+
+struct SPOCK_AA{TI, TF, TM} <: CUSTOM_SOLVER_MODEL
   state :: GENERIC_SOLVER_STATE{TF, TI}
   solver_state_internal :: SP_IMPLICITL_STATE_INTERNAL{TI, TF, TM}
   qn_state :: AA_STATE{TF}
+  problem :: GENERIC_PROBLEM_DEFINITION{TF, TI}
+end
+
+struct SPOCK_RB{TI, TF, TM} <: CUSTOM_SOLVER_MODEL
+  state :: GENERIC_SOLVER_STATE{TF, TI}
+  solver_state_internal :: SP_IMPLICITL_STATE_INTERNAL{TI, TF, TM}
+  qn_state :: RB_STATE{TF}
   problem :: GENERIC_PROBLEM_DEFINITION{TF, TI}
 end
 
@@ -271,14 +286,14 @@ end
 # Model union types
 ##############
 
-# All models with L implicitly constructed
-const MODEL_IMPLICITL = Union{CPOCK, SPOCK}
-
 # All models using the plain CP algorithm
 const MODEL_CP = Union{CPOCK}
 
 # All models using the CP + SuperMann algorithm
-const MODEL_SP = Union{SPOCK}
+const SPOCK = Union{SPOCK_AA, SPOCK_RB}
+
+# All models with L implicitly constructed
+const MODEL_IMPLICITL = Union{CPOCK, SPOCK_AA, SPOCK_RB}
 
 #####################################################
 # Exposed API funcions
@@ -303,7 +318,11 @@ Supported combinations of solver options:
 if solver_options.algorithm == CP
   return build_cpock(scen_tree, cost, dynamics, rms, constraints)
 elseif solver_options.algorithm == SP
-  return build_spock(scen_tree, cost, dynamics, rms, constraints, solver_options.qnewton)
+  if solver_options.qnewton == AA
+    return build_spock_aa(scen_tree, cost, dynamics, rms, constraints, solver_options.qnewton)
+  elseif solver_options.qnewton == RB
+    return build_spock_rb(scen_tree, cost, dynamics, rms, constraints, solver_options.qnewton)
+  end
 end
 
 error("This combination of solver options is not supported.")
