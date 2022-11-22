@@ -24,12 +24,12 @@ function anderson!(
   end
   
   for i = 1:model.state.nz
-    model.qn_state.MR[i, 1] = model.state.delta_rz[i]
-    model.qn_state.MP[i, 1] = model.state.delta_z[i] - model.qn_state.MR[i, 1]
+    model.qn_state.MR[i, 1] = model.state.Δrz[i]
+    model.qn_state.MP[i, 1] = model.state.Δz[i] - model.qn_state.MR[i, 1]
   end 
   for i = 1:model.state.nv
-    model.qn_state.MR[model.state.nz + i, 1] = model.state.delta_rv[i]
-    model.qn_state.MP[model.state.nz + i, 1] = model.state.delta_v[i] - model.qn_state.MR[model.state.nz + i, 1]
+    model.qn_state.MR[model.state.nz + i, 1] = model.state.Δrv[i]
+    model.qn_state.MP[model.state.nz + i, 1] = model.state.Δv[i] - model.qn_state.MR[model.state.nz + i, 1]
   end
 
   for i = 1:model.state.nz

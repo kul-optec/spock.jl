@@ -34,12 +34,12 @@ struct GENERIC_SOLVER_STATE{TF, TI} <: SOLVER_STATE
   xi_1 :: Vector{TF}
   xi_2 :: Vector{TF}
   xi :: Vector{TF}
-  delta_z :: Vector{TF}
-  delta_v :: Vector{TF}
+  Δz :: Vector{TF}
+  Δv :: Vector{TF}
   z_old :: Vector{TF}
   v_old :: Vector{TF}
-  delta_rz :: Vector{TF}
-  delta_rv :: Vector{TF}
+  Δrz :: Vector{TF}
+  Δrv :: Vector{TF}
   res_0 :: Vector{TF}
 end
 
@@ -215,10 +215,10 @@ struct SP_IMPLICITL_STATE_INTERNAL{TI, TF, TM} <: SOLVER_STATE_INTERNAL
   # # Anderson
   # MP :: Matrix{TF}
   # MR :: Matrix{TF}
-  # delta_z_old :: Vector{TF}
-  # delta_v_old :: Vector{TF}
-  # delta_rz_old :: Vector{TF}
-  # delta_rv_old :: Vector{TF}
+  # Δz_old :: Vector{TF}
+  # Δv_old :: Vector{TF}
+  # Δrz_old :: Vector{TF}
+  # Δrv_old :: Vector{TF}
   # aa_wsp :: Vector{TF}
   # aa_Q :: Matrix{TF}
   # aa_R :: LA.UpperTriangular{TF, Matrix{TF}}
@@ -228,10 +228,10 @@ end
 struct AA_STATE{TF}
   MP :: Matrix{TF}
   MR :: Matrix{TF}
-  delta_z_old :: Vector{TF}
-  delta_v_old :: Vector{TF}
-  delta_rz_old :: Vector{TF}
-  delta_rv_old :: Vector{TF}
+  Δz_old :: Vector{TF}
+  Δv_old :: Vector{TF}
+  Δrz_old :: Vector{TF}
+  Δrv_old :: Vector{TF}
   aa_wsp :: Vector{TF}
   aa_Q :: Matrix{TF}
   aa_R :: LA.UpperTriangular{TF, Matrix{TF}}

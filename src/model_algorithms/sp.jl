@@ -254,15 +254,15 @@ function update_sy!(
 
 end
 
-function update_delta_r!(
+function update_Δr!(
   model :: MODEL_SP
 )
 
-  for i in eachindex(model.state.delta_z)
-    model.state.delta_rz[i] = model.state.rz[i] - model.solver_state_internal.rz_old[i]
+  for i in eachindex(model.state.Δz)
+    model.state.Δrz[i] = model.state.rz[i] - model.solver_state_internal.rz_old[i]
   end
-  for i in eachindex(model.state.delta_v)
-    model.state.delta_rv[i] = model.state.rv[i] - model.solver_state_internal.rv_old[i]
+  for i in eachindex(model.state.Δv)
+    model.state.Δrv[i] = model.state.rv[i] - model.solver_state_internal.rv_old[i]
   end
 
 end
@@ -276,20 +276,20 @@ function should_terminate!(
   backtrack_count :: TI,
 ) where {TF <: Real, TI <: Integer}
 
-  for i in eachindex(model.state.delta_z)
-    model.state.delta_z[i] = model.state.z[i] - model.state.z_old[i]
+  for i in eachindex(model.state.Δz)
+    model.state.Δz[i] = model.state.z[i] - model.state.z_old[i]
   end
-  for i in eachindex(model.state.delta_v)
-    model.state.delta_v[i] = model.state.v[i] - model.state.v_old[i]
+  for i in eachindex(model.state.Δv)
+    model.state.Δv[i] = model.state.v[i] - model.state.v_old[i]
   end
 
-  copyto!(model.state.xi_1, model.state.delta_z)
-  copyto!(model.state.xi_2, model.state.delta_v)
+  copyto!(model.state.xi_1, model.state.Δz)
+  copyto!(model.state.xi_2, model.state.Δv)
 
-  # xi_1 <- -1/alpha2 xi_1 + L' * delta_v
-  spock_mul!(model, model.state.xi_1, true, model.state.delta_v, 1., -1. / alpha1)
-  # xi_2 <- -1/alpha2 xi_2 + L * delta_z
-  spock_mul!(model, model.state.xi_2, false, model.state.delta_z, 1., -1. / alpha2)
+  # xi_1 <- -1/alpha2 xi_1 + L' * Δv
+  spock_mul!(model, model.state.xi_1, true, model.state.Δv, 1., -1. / alpha1)
+  # xi_2 <- -1/alpha2 xi_2 + L * Δz
+  spock_mul!(model, model.state.xi_2, false, model.state.Δz, 1., -1. / alpha2)
 
   xi_1 = LA.norm(model.state.xi_1, Inf)
   xi_2 = LA.norm(model.state.xi_2, Inf)
@@ -343,15 +343,15 @@ function should_terminate!(
   return res
 end
 
-function update_delta_old!(
+function update_Δold!(
   model :: MODEL_SP
 )
 
-  copyto!(model.qn_state.delta_z_old, model.state.delta_z)
-  copyto!(model.qn_state.delta_v_old, model.state.delta_v)
+  copyto!(model.qn_state.Δz_old, model.state.Δz)
+  copyto!(model.qn_state.Δv_old, model.state.Δv)
 
-  copyto!(model.qn_state.delta_rz_old, model.state.delta_rz)
-  copyto!(model.qn_state.delta_rv_old, model.state.delta_rv)
+  copyto!(model.qn_state.Δrz_old, model.state.Δrz)
+  copyto!(model.qn_state.Δrv_old, model.state.Δrv)
 
 end
 
@@ -396,7 +396,7 @@ function run_sp!(
     # When using Anderson, we need both Δp and Δr. 
     # Δp is computed at the end of previous iteration in the termination check.
     # Compute Δr now (only if Anderson selected).
-    update_delta_r!(model)
+    update_Δr!(model)
     update_sy!(model)
     broyden_k = generate_qnewton_direction!(model, broyden_k, gamma, sigma)
 
@@ -446,8 +446,8 @@ function run_sp!(
       end
     end
 
-    # Only for Anderson: Update old deltas
-    update_delta_old!(model)
+    # Only for Anderson: Update old Δs
+    update_Δold!(model)
 
     # Check termination criterion
     if should_terminate!(

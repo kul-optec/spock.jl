@@ -60,19 +60,19 @@ function should_terminate!(
 ) where {TF <: Real}
 
   for i = 1:model.state.nz
-    model.state.delta_z[i] = model.state.z[i] - model.state.z_old[i]
+    model.state.Δz[i] = model.state.z[i] - model.state.z_old[i]
   end
   for i = 1:model.state.nv
-    model.state.delta_v[i] = model.state.v[i] - model.state.v_old[i]
+    model.state.Δv[i] = model.state.v[i] - model.state.v_old[i]
   end
 
-  copyto!(model.state.xi_1, model.state.delta_z)
-  copyto!(model.state.xi_2, model.state.delta_v)
+  copyto!(model.state.xi_1, model.state.Δz)
+  copyto!(model.state.xi_2, model.state.Δv)
 
-  # xi_1 <- -1/alpha2 xi_1 + L' * delta_v
-  spock_mul!(model, model.state.xi_1, true, model.state.delta_v, 1., -1. / alpha1)
-  # xi_2 <- -1/alpha2 xi_2 + L * delta_z
-  spock_mul!(model, model.state.xi_2, false, model.state.delta_z, 1., -1. / alpha2)
+  # xi_1 <- -1/alpha2 xi_1 + L' * Δv
+  spock_mul!(model, model.state.xi_1, true, model.state.Δv, 1., -1. / alpha1)
+  # xi_2 <- -1/alpha2 xi_2 + L * Δz
+  spock_mul!(model, model.state.xi_2, false, model.state.Δz, 1., -1. / alpha2)
 
   xi_1 = LA.norm(model.state.xi_1, Inf)
   xi_2 = LA.norm(model.state.xi_2, Inf)
@@ -131,19 +131,19 @@ end
 # ) where {TF <: Real}
 
 #   for i = 1:model.state.nz
-#     model.state.delta_z[i] = model.state.z[i] - model.state.z_old[i]
+#     model.state.Δz[i] = model.state.z[i] - model.state.z_old[i]
 #   end
 #   for i = 1:model.state.nv
-#     model.state.delta_v[i] = model.state.v[i] - model.state.v_old[i]
+#     model.state.Δv[i] = model.state.v[i] - model.state.v_old[i]
 #   end
 
-#   copyto!(model.state.xi_1, model.state.delta_z)
-#   copyto!(model.state.xi_2, model.state.delta_v)
+#   copyto!(model.state.xi_1, model.state.Δz)
+#   copyto!(model.state.xi_2, model.state.Δv)
 
-#   # xi_1 <- -1/alpha2 xi_1 + L' * delta_v
-#   spock_mul!(model, model.state.xi_1, true, model.state.delta_v, 1., -1. / alpha1)
-#   # xi_2 <- -1/alpha2 xi_2 + L * delta_z
-#   spock_mul!(model, model.state.xi_2, false, model.state.delta_z, 1., -1. / alpha2)
+#   # xi_1 <- -1/alpha2 xi_1 + L' * Δv
+#   spock_mul!(model, model.state.xi_1, true, model.state.Δv, 1., -1. / alpha1)
+#   # xi_2 <- -1/alpha2 xi_2 + L * Δz
+#   spock_mul!(model, model.state.xi_2, false, model.state.Δz, 1., -1. / alpha2)
 
 #   xi_1 = LA.norm(model.state.xi_1, Inf)
 #   xi_2 = LA.norm(model.state.xi_2, Inf)
