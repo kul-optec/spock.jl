@@ -193,25 +193,8 @@ struct SP_IMPLICITL_STATE_INTERNAL{TI, TF, TM} <: SOLVER_STATE_INTERNAL
   w_wsp :: Vector{TF}
   wsp_Lz :: Vector{TF}
   wsp_Lv :: Vector{TF}
-  # Restarted Broyden
-  # sz :: Vector{TF}
-  # sv :: Vector{TF}
-  # stildez :: Vector{TF}
-  # stildev :: Vector{TF}
-  # yz :: Vector{TF}
-  # yv :: Vector{TF}
-  # Psz :: Vector{TF}
-  # Psv :: Vector{TF}
-  # Sz_buf :: Vector{TF}
-  # Sv_buf :: Vector{TF}
-  # Stildez_buf :: Vector{TF}
-  # Stildev_buf :: Vector{TF}
-  # Psz_buf :: Vector{TF}
-  # Psv_buf :: Vector{TF}
   rz_old :: Vector{TF}
   rv_old :: Vector{TF}
-  # broyden_wsp_z :: Vector{TF}
-  # broyden_wsp_v :: Vector{TF}
 end
 
 struct AA_STATE{TF}
